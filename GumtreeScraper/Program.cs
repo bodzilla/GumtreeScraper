@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using log4net;
 using OpenQA.Selenium;
 using OpenQA.Selenium.PhantomJS;
 
@@ -10,6 +12,7 @@ namespace GumtreeScraper
 {
     class Program
     {
+        private static readonly ILog Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private static readonly TimeSpan Timer = new TimeSpan(0, 1, 0); // 1 minute.
 
         static void Main(string[] args)
@@ -24,7 +27,7 @@ namespace GumtreeScraper
             // Time to wait if page is still loading.
             driver.Manage().Timeouts().ImplicitWait = Timer;
 
-            Console.WriteLine("Started checks on " + url.Substring(7, 21));
+            Log.Info($"Scraping started on: {url}");
         }
     }
 }
