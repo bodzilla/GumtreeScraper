@@ -10,21 +10,20 @@ using OpenQA.Selenium.PhantomJS;
 
 namespace GumtreeScraper
 {
-    class Program
+    internal class Program
     {
         private static readonly ILog Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private static readonly TimeSpan Timer = new TimeSpan(0, 1, 0); // 1 minute.
 
         static void Main(string[] args)
         {
-            string url = args[0];
+            string url = "https://www.gumtree.com/search?search_category=cars&search_location=e10lj&vehicle_make=renault&vehicle_model=clio&distance=50&max_price=2000&min_price=500&vehicle_mileage=up_to_80000";
 
             // Set up driver.
+            Log.Info("Initialising Gumtree Scraper..");
             PhantomJSDriverService service = PhantomJSDriverService.CreateDefaultService();
             service.AddArgument("--webdriver-loglevel=NONE");
             IWebDriver driver = new PhantomJSDriver(service);
-
-            // Time to wait if page is still loading.
             driver.Manage().Timeouts().ImplicitWait = Timer;
 
             Log.Info($"Scraping started on: {url}");
