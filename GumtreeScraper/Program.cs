@@ -30,24 +30,19 @@ namespace GumtreeScraper
                 _driver = new PhantomJSDriver(service);
                 WebDriverWait wait = new WebDriverWait(_driver, new TimeSpan(0, 1, 0));
 
+                // Load page.
                 Log.Info($"Scraping started on: {url}");
                 _driver.Url = url;
                 wait.Until(d => d.FindElement(By.XPath("//*[@id=\"srp-results\"]/div[1]"))); // Results div.
 
+                // Scrape.
                 Log.Info("Loaded page 1.");
                 IList<IWebElement> results = _driver.FindElements(By.XPath("//*[a[@class=\"listing-link\"]]"));
-                IList<IWebElement> articles = new List<IWebElement>();
 
                 foreach (var result in results)
                 {
                     string xpath = GetElementXPath(result);
-                    Log.Info(xpath);
-                    articles.Add(_driver.FindElement(By.XPath(xpath)));
-
-                }
-
-                foreach (var article in articles)
-                {
+                    IWebElement article = _driver.FindElement(By.XPath(xpath));
                     Log.Info(article.Text);
                 }
             }
