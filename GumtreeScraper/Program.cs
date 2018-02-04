@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Configuration;
 using System.Reflection;
+using System.Text;
 using System.Text.RegularExpressions;
 using log4net;
 using OpenQA.Selenium;
@@ -15,7 +16,6 @@ namespace GumtreeScraper
         private static readonly ILog Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private static readonly int Timeout = int.Parse(ConfigurationManager.AppSettings["TimeoutSecs"]);
         private static readonly int Pages = int.Parse(ConfigurationManager.AppSettings["Pages"]);
-        private static readonly Regex FilterNonNumeric = new Regex(@"[^\d]");
         private static IList<Article> _articles = new List<Article>();
         private static IWebDriver _driver;
         private static WebDriverWait _wait;
@@ -51,29 +51,38 @@ namespace GumtreeScraper
                         try
                         {
                             string path = GetElementXPath(result);
-                            string link = _driver.FindElement(By.XPath($"{path}/a")).GetAttribute("href");
-                            string title = _driver.FindElement(By.XPath($"{path}/a/div[2]/h2")).Text;
+                            string link = _driver.FindElement(By.XPath($"{path}/a")).GetAttribute("href").Trim();
+                            string title = _driver.FindElement(By.XPath($"{path}/a/div[2]/h2")).Text.Trim().ToLower();
+
+                            // If link and title are empty, then this is not a valid article.
                             if (String.IsNullOrWhiteSpace(link) && String.IsNullOrWhiteSpace(title)) continue;
-                            string location = _driver.FindElement(By.XPath($"{path}/a/div[2]/div[1]/span")).Text;
-                            string description = _driver.FindElement(By.XPath($"{path}/a/div[2]/p")).Text;
-                            string year = _driver.FindElement(By.XPath($"{path}/a/div[2]/ul/li[1]/span[2]")).Text;
-                            string mileage = _driver.FindElement(By.XPath($"{path}/a/div[2]/ul/li[2]/span[2]")).Text;
-                            string fuelType = _driver.FindElement(By.XPath($"{path}/a/div[2]/ul/li[3]/span[2]")).Text;
-                            string engineSize = _driver.FindElement(By.XPath($"{path}/a/div[2]/ul/li[4]/span[2]")).Text;
-                            string price = _driver.FindElement(By.XPath($"{path}/a/div[2]/span")).Text;
+
+                            string location = _driver.FindElement(By.XPath($"{path}/a/div[2]/div[1]/span")).Text.Trim().ToLower();
+                            string description = _driver.FindElement(By.XPath($"{path}/a/div[2]/p")).Text.Trim().ToLower();
+                            string year = _driver.FindElement(By.XPath($"{path}/a/div[2]/ul/li[1]/span[2]")).Text.Trim();
+                            string mileage = _driver.FindElement(By.XPath($"{path}/a/div[2]/ul/li[2]/span[2]")).Text.Trim().ToLower();
+                            string fuelType = _driver.FindElement(By.XPath($"{path}/a/div[2]/ul/li[3]/span[2]")).Text.Trim().ToLower();
+                            string engineSize = _driver.FindElement(By.XPath($"{path}/a/div[2]/ul/li[4]/span[2]")).Text.Trim();
+                            string price = _driver.FindElement(By.XPath($"{path}/a/div[2]/span")).Text.Trim();
+
+                            // Set up regex.
+                            Regex removeNonNumeric = new Regex(@"[^\d]");
+                            Regex removeLineBreaks = new Regex(@"\r\n?|\n");
+                            Regex removeExcessiveSpaces = new Regex(@"\s+");
+                            Regex removeString = new Regex(@".*distance from search location.*miles ");
 
                             // Standardise.
                             Article article = new Article
                             {
-                                Link = link.Trim(),
-                                Title = title.Trim(),
-                                Location = location.Trim(),
-                                Description = description.Trim(),
+                                Link = link,
+                                Title = removeExcessiveSpaces.Replace(CleanText(removeLineBreaks.Replace(title, " ")), " "),
+                                Location = removeString.Replace(removeExcessiveSpaces.Replace(CleanText(removeLineBreaks.Replace(location, " ")), " "), String.Empty),
+                                Description = removeExcessiveSpaces.Replace(CleanText(removeLineBreaks.Replace(description, " ")), " "),
                                 Year = int.Parse(year),
-                                Mileage = int.Parse(FilterNonNumeric.Replace(mileage, String.Empty)),
-                                FuelType = fuelType.Trim(),
-                                EngineSize = int.Parse(FilterNonNumeric.Replace(engineSize, String.Empty)),
-                                Price = int.Parse(FilterNonNumeric.Replace(price, String.Empty))
+                                Mileage = int.Parse(removeNonNumeric.Replace(mileage, String.Empty)),
+                                FuelType = fuelType,
+                                EngineSize = int.Parse(removeNonNumeric.Replace(engineSize, String.Empty)),
+                                Price = int.Parse(removeNonNumeric.Replace(price, String.Empty))
                             };
                             _articles.Add(article);
                         }
@@ -131,6 +140,16 @@ namespace GumtreeScraper
                                       "}" +
                                       "return getElementXPath(arguments[0]).toLowerCase();";
             return (string)((IJavaScriptExecutor)_driver).ExecuteScript(javaScript, element);
+        }
+
+        private static string CleanText(string text)
+        {
+            HashSet<char> removeChars = new HashSet<char>(@"?&^$#@!()+-,:;<>’\|'-_*");
+            StringBuilder result = new StringBuilder(text.Length);
+            foreach (char c in text)
+                if (!removeChars.Contains(c)) // prevent dirty chars
+                    result.Append(c);
+            return result.ToString();
         }
     }
 }
