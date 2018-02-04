@@ -32,7 +32,7 @@ namespace GumtreeScraper
                 _url = "https://www.gumtree.com/search?search_category=cars&search_location=e10lj&vehicle_make=renault&vehicle_model=clio&distance=50&max_price=2000&min_price=500&vehicle_mileage=up_to_80000&page=";
 
                 // Scrape results by paging through.
-                ScrapePage();
+                ScrapePages();
 
                 // TODO: Cleanse data.
             }
@@ -47,7 +47,7 @@ namespace GumtreeScraper
             }
         }
 
-        private static void ScrapePage()
+        private static void ScrapePages()
         {
             for (int i = 1; i <= Pages; i++)
             {
