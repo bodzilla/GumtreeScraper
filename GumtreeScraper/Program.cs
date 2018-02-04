@@ -4,6 +4,7 @@ using System.Configuration;
 using System.Reflection;
 using log4net;
 using OpenQA.Selenium;
+using OpenQA.Selenium.Chrome;
 using OpenQA.Selenium.PhantomJS;
 using OpenQA.Selenium.Support.UI;
 
@@ -12,6 +13,7 @@ namespace GumtreeScraper
     internal class Program
     {
         private static readonly ILog Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        private static readonly int Timeout = int.Parse(ConfigurationManager.AppSettings["TimeoutSecs"]);
         private static readonly int Pages = int.Parse(ConfigurationManager.AppSettings["Pages"]);
         private static IWebDriver _driver;
         private static WebDriverWait _wait;
@@ -26,9 +28,9 @@ namespace GumtreeScraper
                 PhantomJSDriverService service = PhantomJSDriverService.CreateDefaultService();
                 service.AddArgument("--webdriver-loglevel=NONE");
                 _driver = new PhantomJSDriver(service);
-                _wait = new WebDriverWait(_driver, new TimeSpan(0, 1, 0));
+                _driver.Manage().Window.Maximize(); // To capture all content.
 
-                // Set page.
+                _wait = new WebDriverWait(_driver, new TimeSpan(0, 0, Timeout));
                 _url = "https://www.gumtree.com/search?search_category=cars&search_location=e10lj&vehicle_make=renault&vehicle_model=clio&distance=50&max_price=2000&min_price=500&vehicle_mileage=up_to_80000&page=";
 
                 // Scrape results by paging through.
@@ -43,6 +45,7 @@ namespace GumtreeScraper
             finally
             {
                 Log.Info("Gumtree Scraper finished session.");
+                _driver.Quit();
                 Environment.Exit(0);
             }
         }
@@ -51,20 +54,27 @@ namespace GumtreeScraper
         {
             for (int i = 1; i <= Pages; i++)
             {
+                // Set page.
                 string currentPage = _url + i;
                 Log.Info($"Scraping page: {currentPage}");
                 _driver.Url = currentPage;
                 _wait.Until(d => d.FindElement(By.XPath("//*[@id=\"srp-results\"]/div[1]"))); // Results div.
 
-                // Scrape.
+                // Find articles and add to list.
                 IList<IWebElement> articles = _driver.FindElements(By.XPath("//*[a[@class=\"listing-link\"]]"));
-
                 foreach (IWebElement article in articles)
                 {
-                    string xpath = GetElementXPath(article);
-                    string link = _driver.FindElement(By.XPath($"{xpath}/a")).GetAttribute("href");
-                    string title = _driver.FindElement(By.XPath($"{xpath}/a/div[2]/h2")).Text;
-                    if (String.IsNullOrWhiteSpace(link) && String.IsNullOrWhiteSpace(title)) continue;
+                    try
+                    {
+                        string xpath = GetElementXPath(article);
+                        string link = _driver.FindElement(By.XPath($"{xpath}/a")).GetAttribute("href");
+                        string title = _driver.FindElement(By.XPath($"{xpath}/a/div[2]/h2")).Text;
+                        if (String.IsNullOrWhiteSpace(link) && String.IsNullOrWhiteSpace(title)) continue;
+                        string location = _driver.FindElement(By.XPath($"{xpath}/a/div[2]/div[1]/span")).Text;
+                        string description = _driver.FindElement(By.XPath($"{xpath}/a/div[2]/p")).Text;
+                        string year = _driver.FindElement(By.XPath($"{xpath}/a/div[2]/ul/li[1]/span[2]")).Text;
+                    }
+                    catch (Exception) { } // Ignore.
                 }
             }
         }
