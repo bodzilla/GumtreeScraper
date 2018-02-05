@@ -4,10 +4,12 @@ using System.Configuration;
 using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
+using GumtreeScraper.Model;
 using log4net;
 using OpenQA.Selenium;
 using OpenQA.Selenium.PhantomJS;
 using OpenQA.Selenium.Support.UI;
+using GumtreeScraper.Repository;
 
 namespace GumtreeScraper
 {
@@ -16,7 +18,6 @@ namespace GumtreeScraper
         private static readonly ILog Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private static readonly int Timeout = int.Parse(ConfigurationManager.AppSettings["TimeoutSecs"]);
         private static readonly int Pages = int.Parse(ConfigurationManager.AppSettings["Pages"]);
-        private static IList<Article> _articles = new List<Article>();
         private static IWebDriver _driver;
         private static WebDriverWait _wait;
         private static string _url;
@@ -25,6 +26,13 @@ namespace GumtreeScraper
         {
             try
             {
+                // Testing EF logic.
+                CarMakeRepository carMakeRepo = new CarMakeRepository();
+                CarMake carMake = new CarMake();
+                carMake.Name = "Renault";
+                carMakeRepo.Create(carMake);
+
+
                 // Set up driver.
                 Log.Info("Initialising Gumtree Scraper..");
                 PhantomJSDriverService service = PhantomJSDriverService.CreateDefaultService();
@@ -42,10 +50,10 @@ namespace GumtreeScraper
                     string currentPage = $"{_url}&page={i}";
                     Log.Info($"Scraping page: {currentPage}");
                     _driver.Url = currentPage;
-                    _wait.Until(d => d.FindElement(By.XPath("//*[@id=\"srp-results\"]/div[1]"))); // Results div.
+                    _wait.Until(d => d.FindElement(By.XPath(@"//*[@id=""srp-results""]/div[1]"))); // Results div.
 
                     // Find articles and add to list.
-                    IList<IWebElement> results = _driver.FindElements(By.XPath("//*[a[@class=\"listing-link\"]]"));
+                    IList<IWebElement> results = _driver.FindElements(By.XPath(@"//*[a[@class=""listing-link""]]"));
                     foreach (IWebElement result in results)
                     {
                         try
@@ -71,38 +79,12 @@ namespace GumtreeScraper
                             Regex removeExcessiveSpaces = new Regex(@"\s+");
                             Regex removeString = new Regex(@".*distance from search location.*miles ");
 
-                            // Standardise.
-                            Article article = new Article
-                            {
-                                Link = link,
-                                Title = removeExcessiveSpaces.Replace(CleanText(removeLineBreaks.Replace(title, " ")), " "),
-                                Location = removeString.Replace(removeExcessiveSpaces.Replace(CleanText(removeLineBreaks.Replace(location, " ")), " "), String.Empty),
-                                Description = removeExcessiveSpaces.Replace(CleanText(removeLineBreaks.Replace(description, " ")), " "),
-                                Year = int.Parse(year),
-                                Mileage = int.Parse(removeNonNumeric.Replace(mileage, String.Empty)),
-                                FuelType = fuelType,
-                                EngineSize = int.Parse(removeNonNumeric.Replace(engineSize, String.Empty)),
-                                Price = int.Parse(removeNonNumeric.Replace(price, String.Empty))
-                            };
-                            _articles.Add(article);
+                            // TODO: Standardise the result set.
                         }
                         catch (Exception) { } // Ignore.
                     }
                 }
-
-                // List results.
-                Log.Info($"Found {_articles.Count} articles.");
-                foreach (Article article in _articles)
-                {
-                    Log.Info($"Link: {article.Link}");
-                    Log.Info($"Title: {article.Title}");
-                    Log.Info($"Location: {article.Location}");
-                    Log.Info($"Description: {article.Description}");
-                    Log.Info($"Mileage: {article.Mileage}");
-                    Log.Info($"FuelType: {article.FuelType}");
-                    Log.Info($"EngineSize: {article.EngineSize} cc");
-                    Log.Info($"Price: £{article.Price}");
-                }
+                // TODO: List the results.
             }
             catch (Exception ex)
             {
@@ -117,39 +99,16 @@ namespace GumtreeScraper
 
         private static string GetElementXPath(IWebElement element)
         {
-            const string javaScript = "function getElementXPath(elt){" +
-                                      "var path = \"\";" +
-                                      "for (; elt && elt.nodeType == 1; elt = elt.parentNode){" +
-                                      "idx = getElementIdx(elt);" +
-                                      "xname = elt.tagName;" +
-                                      "if (idx > 1){" +
-                                      "xname += \"[\" + idx + \"]\";" +
-                                      "}" +
-                                      "path = \"/\" + xname + path;" +
-                                      "}" +
-                                      "return path;" +
-                                      "}" +
-                                      "function getElementIdx(elt){" +
-                                      "var count = 1;" +
-                                      "for (var sib = elt.previousSibling; sib ; sib = sib.previousSibling){" +
-                                      "if(sib.nodeType == 1 && sib.tagName == elt.tagName){" +
-                                      "count++;" +
-                                      "}" +
-                                      "}" +
-                                      "return count;" +
-                                      "}" +
-                                      "return getElementXPath(arguments[0]).toLowerCase();";
+            const string javaScript = @"function getElementXPath(elt){var path = """";for (; elt && elt.nodeType == 1; elt = elt.parentNode){idx = getElementIdx(elt);xname = elt.tagName;if (idx > 1){xname += ""["" + idx + ""]"";}path = ""/"" + xname + path;}return path;}function getElementIdx(elt){var count = 1;for (var sib = elt.previousSibling; sib;sib = sib.previousSibling){if(sib.nodeType == 1 && sib.tagName == elt.tagName){count++;}}return count;}return getElementXPath(arguments[0]).toLowerCase();";
             return (string)((IJavaScriptExecutor)_driver).ExecuteScript(javaScript, element);
         }
 
         private static string CleanText(string text)
         {
             HashSet<char> removeChars = new HashSet<char>(@"?&^$#@!()+-,:;<>’\|'-_*");
-            StringBuilder result = new StringBuilder(text.Length);
-            foreach (char c in text)
-                if (!removeChars.Contains(c)) // prevent dirty chars
-                    result.Append(c);
-            return result.ToString();
+            StringBuilder cleanText = new StringBuilder(text.Length);
+            foreach (char c in text) if (!removeChars.Contains(c)) cleanText.Append(c);
+            return cleanText.ToString();
         }
     }
 }

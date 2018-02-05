@@ -1,14 +1,23 @@
-﻿using System;
+﻿using GumtreeScraper.Model.Interfaces;
+using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
-using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace GumtreeScraper
+namespace GumtreeScraper.Model
 {
-    public class Article
+    public class ArticleVersion : IBaseModel
     {
+        public int Id { get; set; }
+
+        public DateTime DateAdded { get; set; }
+
+        public int ArticleId { get; set; }
+
+        public int Version { get; set; }
+
         public string Link { get; set; }
 
         public string Title { get; set; }
@@ -26,5 +35,8 @@ namespace GumtreeScraper
         public int EngineSize { get; set; }
 
         public int Price { get; set; }
+
+        [ForeignKey("ArticleId")]
+        public virtual Article VirtualArticle { get; set; }
     }
 }

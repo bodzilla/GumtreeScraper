@@ -1,9 +1,15 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.27130.2020
+# Visual Studio 14
+VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GumtreeScraper", "GumtreeScraper\GumtreeScraper.csproj", "{3522EC33-61FA-4223-8247-E81FFDD2C0E1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GumtreeScraper.Model", "GumtreeScraper.Model\GumtreeScraper.Model.csproj", "{0CDDBA37-5CBE-42DD-9A94-3EB5136A9878}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GumtreeScraper.DataAccess", "GumtreeScraper.DataAccess\GumtreeScraper.DataAccess.csproj", "{1D6E2C05-CBEF-4B07-934C-C0DA2B66DA92}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GumtreeScraper.Repository", "GumtreeScraper.Repository\GumtreeScraper.Repository.csproj", "{EFFE1D46-1999-4912-804B-CC2EB72C77F7}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +21,18 @@ Global
 		{3522EC33-61FA-4223-8247-E81FFDD2C0E1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3522EC33-61FA-4223-8247-E81FFDD2C0E1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3522EC33-61FA-4223-8247-E81FFDD2C0E1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0CDDBA37-5CBE-42DD-9A94-3EB5136A9878}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0CDDBA37-5CBE-42DD-9A94-3EB5136A9878}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0CDDBA37-5CBE-42DD-9A94-3EB5136A9878}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0CDDBA37-5CBE-42DD-9A94-3EB5136A9878}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1D6E2C05-CBEF-4B07-934C-C0DA2B66DA92}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1D6E2C05-CBEF-4B07-934C-C0DA2B66DA92}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1D6E2C05-CBEF-4B07-934C-C0DA2B66DA92}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1D6E2C05-CBEF-4B07-934C-C0DA2B66DA92}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EFFE1D46-1999-4912-804B-CC2EB72C77F7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EFFE1D46-1999-4912-804B-CC2EB72C77F7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EFFE1D46-1999-4912-804B-CC2EB72C77F7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EFFE1D46-1999-4912-804B-CC2EB72C77F7}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
