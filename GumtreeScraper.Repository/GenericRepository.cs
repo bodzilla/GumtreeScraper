@@ -75,6 +75,11 @@ namespace GumtreeScraper.Repository
             return item;
         }
 
+        public bool Exists(Func<T, bool> where)
+        {
+            return Get(where) != null;
+        }
+
         public virtual void Create(T[] items)
         {
             using (var context = new GumtreeScraperContext())

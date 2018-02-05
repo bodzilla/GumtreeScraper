@@ -33,13 +33,30 @@ namespace GumtreeScraper.Repository
             return _repository.Get(where, navigationProperties);
         }
 
+        public bool Exists(Func<CarMake, bool> where)
+        {
+            return _repository.Exists(where);
+        }
+
         public void Create(params CarMake[] carMakes)
         {
+            // Check for duplicates before creating.
+            foreach (CarMake carMake in carMakes)
+            {
+                bool carMakeExists = Exists(x => x.Name == carMake.Name);
+                if (carMakeExists) throw new ArgumentException("Car Make exists.");
+            }
             _repository.Create(carMakes);
         }
 
         public void Update(params CarMake[] carMakes)
         {
+            // Check for duplicates before updating.
+            foreach (CarMake carMake in carMakes)
+            {
+                bool carMakeExists = Exists(x => x.Name == carMake.Name);
+                if (carMakeExists) throw new ArgumentException("Car Make exists.");
+            }
             _repository.Update(carMakes);
         }
 

@@ -16,6 +16,8 @@ namespace GumtreeScraper.Repository.Interfaces
 
         T Get(Func<T, bool> where, params Expression<Func<T, object>>[] navigationProperties);
 
+        bool Exists(Func<T, bool> where);
+
         void Create(params T[] users);
 
         void Update(params T[] items);

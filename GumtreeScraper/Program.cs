@@ -32,6 +32,11 @@ namespace GumtreeScraper
                 carMake.Name = "Renault";
                 carMakeRepo.Create(carMake);
 
+                CarModelRepository carModelRepo = new CarModelRepository();
+                CarModel carModel = new CarModel();
+                carModel.CarMakeId = carMake.Id;
+                carModel.Name = "Clio";
+                carModelRepo.Create(carModel);
 
                 // Set up driver.
                 Log.Info("Initialising Gumtree Scraper..");
