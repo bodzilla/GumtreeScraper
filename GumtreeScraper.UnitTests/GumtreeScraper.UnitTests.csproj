@@ -67,11 +67,6 @@
     <Compile Include="RepositoryTests\CarMakeRespositoryTests.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\GumtreeScraper\App.config">
-      <Link>App.config</Link>
-    </None>
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="..\GumtreeScraper.DataAccess\GumtreeScraper.DataAccess.csproj">
       <Project>{1d6e2c05-cbef-4b07-934c-c0da2b66da92}</Project>
       <Name>GumtreeScraper.DataAccess</Name>
@@ -84,6 +79,9 @@
       <Project>{effe1d46-1999-4912-804b-cc2eb72c77f7}</Project>
       <Name>GumtreeScraper.Repository</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="App.config" />
   </ItemGroup>
   <Choose>
     <When Condition="'$(VisualStudioVersion)' == '10.0' And '$(IsCodedUITest)' == 'True'">
