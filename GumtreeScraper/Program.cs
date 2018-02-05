@@ -28,6 +28,9 @@ namespace GumtreeScraper
             {
                 // Testing EF logic.
                 CarMakeRepository carMakeRepo = new CarMakeRepository();
+                CarMake renalt = carMakeRepo.Get(x => x.Id == 1, x => x.VirtualCarModels);
+                carMakeRepo.Delete(renalt);
+
                 CarMake carMake = new CarMake();
                 carMake.Name = "Renault";
                 carMakeRepo.Create(carMake);
