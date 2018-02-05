@@ -26,21 +26,6 @@ namespace GumtreeScraper
         {
             try
             {
-                // Testing EF logic.
-                CarMakeRepository carMakeRepo = new CarMakeRepository();
-                CarMake renalt = carMakeRepo.Get(x => x.Id == 1, x => x.VirtualCarModels);
-                carMakeRepo.Delete(renalt);
-
-                CarMake carMake = new CarMake();
-                carMake.Name = "Renault";
-                carMakeRepo.Create(carMake);
-
-                CarModelRepository carModelRepo = new CarModelRepository();
-                CarModel carModel = new CarModel();
-                carModel.CarMakeId = carMake.Id;
-                carModel.Name = "Clio";
-                carModelRepo.Create(carModel);
-
                 // Set up driver.
                 Log.Info("Initialising Gumtree Scraper..");
                 PhantomJSDriverService service = PhantomJSDriverService.CreateDefaultService();
