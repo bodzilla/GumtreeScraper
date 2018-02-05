@@ -49,6 +49,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ArticleRepostiory.cs" />
+    <Compile Include="ArticleVersionRepository.cs" />
     <Compile Include="CarMakeRepository.cs" />
     <Compile Include="CarModelRepository.cs" />
     <Compile Include="GenericRepository.cs" />
