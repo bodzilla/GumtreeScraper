@@ -20,6 +20,8 @@ namespace GumtreeScraper.Model
 
         public DateTime DateAdded { get; set; }
 
+        public string Link { get; set; }
+
         public int CarModelId { get; set; }
 
         [ForeignKey("CarModelId")]
