@@ -28,6 +28,11 @@ namespace GumtreeScraper.Repository
             return _repository.GetList(where, navigationProperties);
         }
 
+        public ArticleVersion GetByDesc(Func<ArticleVersion, bool> where, Expression<Func<ArticleVersion, object>> navigationProperty, Func<ArticleVersion, object> orderProperty)
+        {
+            return _repository.GetByDesc(where, navigationProperty, orderProperty);
+        }
+
         public ArticleVersion Get(Func<ArticleVersion, bool> where, params Expression<Func<ArticleVersion, object>>[] navigationProperties)
         {
             return _repository.Get(where, navigationProperties);
