@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Configuration;
+using System.Linq;
 using System.Reflection;
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 using GumtreeScraper.Model;
@@ -45,8 +47,10 @@ namespace GumtreeScraper
                     _driver.Url = currentPage;
                     _wait.Until(d => d.FindElement(By.XPath(@"//*[@id=""srp-results""]/div[1]"))); // Results div.
 
-                    // Find articles and add to list.
                     IList<IWebElement> results = _driver.FindElements(By.XPath(@"//*[a[@class=""listing-link""]]"));
+                    IList<string> links = new List<string>();
+
+                    // Find articles and add links to list.
                     foreach (IWebElement result in results)
                     {
                         try
@@ -65,6 +69,29 @@ namespace GumtreeScraper
                             string fuelType = _driver.FindElement(By.XPath($"{path}/a/div[2]/ul/li[3]/span[2]")).Text.Trim().ToLower();
                             string engineSize = _driver.FindElement(By.XPath($"{path}/a/div[2]/ul/li[4]/span[2]")).Text.Trim();
                             string price = _driver.FindElement(By.XPath($"{path}/a/div[2]/span")).Text.Trim();
+
+                            // Check if link exists in db.
+                            ArticleRepository articleRepo = new ArticleRepository();
+                            bool exists = articleRepo.Exists(x => x.Link == link);
+                            if (exists)
+                            {
+                                ArticleVersionRepository articleVersionRepo = new ArticleVersionRepository();
+                                ArticleVersion latestVersion = articleVersionRepo.Get(x => x.VirtualArticle.Link == link, x => x.Version);
+                                byte[] titleBytes = Encoding.ASCII.GetBytes(latestVersion.Title);
+                                byte[] locationBytes = Encoding.ASCII.GetBytes(latestVersion.Location);
+                                byte[] descriptionBytes = Encoding.ASCII.GetBytes(latestVersion.Description);
+                                byte[] yearBytes = Encoding.ASCII.GetBytes(latestVersion.Year.ToString());
+                                byte[] mileageBytes = Encoding.ASCII.GetBytes(latestVersion.Mileage.ToString());
+                                byte[] fuelTypeBytes = Encoding.ASCII.GetBytes(latestVersion.FuelType);
+                                byte[] engineSizeBytes = Encoding.ASCII.GetBytes(latestVersion.EngineSize.ToString());
+                                byte[] priceBytes = Encoding.ASCII.GetBytes(latestVersion.Price.ToString());
+                                byte[] dbBytes = CombineBytes(titleBytes, locationBytes, descriptionBytes, yearBytes, mileageBytes, fuelTypeBytes, engineSizeBytes, priceBytes);
+                                string dbHash = GenerateHash(dbBytes);
+
+                                // TODO: Compare dbHash agaisnt current hash for new version.
+                            }
+
+                            // TODO: New article version.
 
                             // Set up regex.
                             Regex removeNonNumeric = new Regex(@"[^\d]");
@@ -102,6 +129,32 @@ namespace GumtreeScraper
             StringBuilder cleanText = new StringBuilder(text.Length);
             foreach (char c in text) if (!removeChars.Contains(c)) cleanText.Append(c);
             return cleanText.ToString();
+        }
+
+        private static string GenerateHash(byte[] data)
+        {
+            StringBuilder hash = new StringBuilder();
+
+            // Use input string to calculate MD5 hash.
+            MD5 md5 = MD5.Create();
+            byte[] hashBytes = md5.ComputeHash(data);
+
+            // Convert the byte array to hexadecimal string.
+            foreach (byte _byte in hashBytes) hash.Append(_byte.ToString("X2"));
+            return $"0x{hash}";
+        }
+
+        private static byte[] CombineBytes(params byte[][] arrays)
+        {
+            // Combine multiple byte arrays.
+            byte[] rv = new byte[arrays.Sum(a => a.Length)];
+            int offset = 0;
+            foreach (byte[] array in arrays)
+            {
+                Buffer.BlockCopy(array, 0, rv, offset, array.Length);
+                offset += array.Length;
+            }
+            return rv;
         }
     }
 }
