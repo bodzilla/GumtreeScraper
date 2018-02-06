@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Configuration;
+using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using System.Security.Cryptography;
@@ -21,12 +22,18 @@ namespace GumtreeScraper
         private static readonly int Timeout = int.Parse(ConfigurationManager.AppSettings["TimeoutSecs"]);
         private static readonly int Pages = int.Parse(ConfigurationManager.AppSettings["Pages"]);
 
+        private static readonly CarMakeRepository CarMakeRepo = new CarMakeRepository();
+        private static readonly CarModelRepository CarModelRepo = new CarModelRepository();
         private static readonly ArticleRepository ArticleRepo = new ArticleRepository();
         private static readonly ArticleVersionRepository ArticleVersionRepo = new ArticleVersionRepository();
 
         private static readonly Regex RemoveNonNumeric = new Regex(@"[^\d]");
         private static readonly Regex RemoveLineBreaks = new Regex(@"\r\n?|\n");
         private static readonly Regex RemoveExcessLocationText = new Regex(@".*Distance from search location.* \| ");
+
+        private static string _cakeMake;
+        private static string _carModel;
+        private static int _carModelId;
 
         private static IWebDriver _driver;
         private static WebDriverWait _wait;
@@ -36,6 +43,22 @@ namespace GumtreeScraper
         {
             try
             {
+                Log.Info("Retrieving runtime variables..");
+
+                // Setting up initial vars.
+                _cakeMake = ToTitleCase(args[0]);
+                _carModel = ToTitleCase(args[1]);
+                _url = args[2];
+
+                // Check if car make and model exist in db.
+                bool carMakeExists = CarMakeRepo.Exists(x => x.Name.Equals(_cakeMake, StringComparison.CurrentCultureIgnoreCase));
+                bool carModelExists = CarModelRepo.Exists(x => x.Name.Equals(_carModel, StringComparison.CurrentCultureIgnoreCase));
+
+                // Create/get and set ids.
+                if (!carMakeExists) CarMakeRepo.Create(new CarMake { Name = _cakeMake });
+                if (!carModelExists) CarModelRepo.Create(new CarModel { Name = _carModel, CarMakeId = CarMakeRepo.Get(x => x.Name.Equals(_cakeMake)).Id });
+                _carModelId = CarModelRepo.Get(x => x.Name.Equals(_carModel)).Id;
+
                 // Set up driver.
                 Log.Info("Initialising Gumtree Scraper..");
                 PhantomJSDriverService service = PhantomJSDriverService.CreateDefaultService();
@@ -44,7 +67,6 @@ namespace GumtreeScraper
                 _driver.Manage().Window.Maximize(); // To capture all content.
 
                 _wait = new WebDriverWait(_driver, new TimeSpan(0, 0, Timeout));
-                _url = args[0];
 
                 // Scrape results by paging through.
                 for (int i = 1; i <= Pages; i++)
@@ -175,7 +197,7 @@ namespace GumtreeScraper
                                 // New article.
                                 articleState = "new";
                                 article.Link = link;
-                                article.CarModelId = new CarModelRepository().Get(x => x.Name.Equals("Clio")).Id;
+                                article.CarModelId = _carModelId;
                                 ArticleRepo.Create(article);
                                 articleVersion.ArticleId = article.Id; // Link new article.
                                 articleVersion.Version = 1; // Set first version.
@@ -259,6 +281,11 @@ namespace GumtreeScraper
                 offset += array.Length;
             }
             return combinedBytes;
+        }
+
+        public static string ToTitleCase(string text)
+        {
+            return CultureInfo.CurrentCulture.TextInfo.ToTitleCase(text.ToLower());
         }
     }
 }
