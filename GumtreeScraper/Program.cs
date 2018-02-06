@@ -20,6 +20,10 @@ namespace GumtreeScraper
         private static readonly ILog Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private static readonly int Timeout = int.Parse(ConfigurationManager.AppSettings["TimeoutSecs"]);
         private static readonly int Pages = int.Parse(ConfigurationManager.AppSettings["Pages"]);
+        private static readonly CarMakeRepository CarMakeRepo = new CarMakeRepository();
+        private static readonly CarModelRepository CarModelRepo = new CarModelRepository();
+        private static readonly ArticleRepository ArticleRepo = new ArticleRepository();
+        private static readonly ArticleVersionRepository ArticleVersionRepo = new ArticleVersionRepository();
         private static IWebDriver _driver;
         private static WebDriverWait _wait;
         private static string _url;
@@ -28,6 +32,21 @@ namespace GumtreeScraper
         {
             try
             {
+                //CarMake carMake = new CarMake();
+                //carMake.Name = "Renault";
+                //CarMakeRepo.Create(carMake);
+
+                //CarModel carModel = new CarModel();
+                //carModel.CarMakeId = carMake.Id;
+                //carModel.Name = "Clio";
+                //CarModelRepo.Create(carModel);
+
+                // Standardise article regex.
+                Regex removeNonNumeric = new Regex(@"[^\d]");
+                Regex removeLineBreaks = new Regex(@"\r\n?|\n");
+                Regex removeExcessiveSpaces = new Regex(@"\s+");
+                Regex removeRedunantString = new Regex(@".*Distance from search location.* \| ");
+
                 // Set up driver.
                 Log.Info("Initialising Gumtree Scraper..");
                 PhantomJSDriverService service = PhantomJSDriverService.CreateDefaultService();
@@ -36,7 +55,7 @@ namespace GumtreeScraper
                 _driver.Manage().Window.Maximize(); // To capture all content.
 
                 _wait = new WebDriverWait(_driver, new TimeSpan(0, 0, Timeout));
-                _url = "https://www.gumtree.com/search?search_category=cars&search_location=e10lj&vehicle_make=renault&vehicle_model=clio&distance=50&max_price=2000&min_price=500&vehicle_mileage=up_to_80000";
+                _url = "https://www.gumtree.com/search?search_category=cars&search_location=e10lj&vehicle_make=renault&vehicle_model=clio&distance=50&max_price=2000&min_price=500&vehicle_mileage=up_to_80000&photos_filter=true";
 
                 // Scrape results by paging through.
                 for (int i = 1; i <= Pages; i++)
@@ -47,64 +66,274 @@ namespace GumtreeScraper
                     _driver.Url = currentPage;
                     _wait.Until(d => d.FindElement(By.XPath(@"//*[@id=""srp-results""]/div[1]"))); // Results div.
 
-                    IList<IWebElement> results = _driver.FindElements(By.XPath(@"//*[a[@class=""listing-link""]]"));
-                    IList<string> links = new List<string>();
-
                     // Find articles and add links to list.
+                    IList<IWebElement> results = _driver.FindElements(By.XPath(@"//*[a[@class=""listing-link""]]"));
                     foreach (IWebElement result in results)
                     {
                         try
                         {
                             string path = GetElementXPath(result);
                             string link = _driver.FindElement(By.XPath($"{path}/a")).GetAttribute("href").Trim();
-                            string title = _driver.FindElement(By.XPath($"{path}/a/div[2]/h2")).Text.Trim().ToLower();
+                            string title = _driver.FindElement(By.XPath($"{path}/a/div[2]/h2")).Text.Trim();
 
-                            // If link and title are empty, then this is not a valid article.
-                            if (String.IsNullOrWhiteSpace(link) && String.IsNullOrWhiteSpace(title)) continue;
+                            // If link or title are empty, then this is not a valid article.
+                            if (String.IsNullOrWhiteSpace(link) || String.IsNullOrWhiteSpace(title)) continue;
 
-                            string location = _driver.FindElement(By.XPath($"{path}/a/div[2]/div[1]/span")).Text.Trim().ToLower();
-                            string description = _driver.FindElement(By.XPath($"{path}/a/div[2]/p")).Text.Trim().ToLower();
-                            string year = _driver.FindElement(By.XPath($"{path}/a/div[2]/ul/li[1]/span[2]")).Text.Trim();
-                            string mileage = _driver.FindElement(By.XPath($"{path}/a/div[2]/ul/li[2]/span[2]")).Text.Trim().ToLower();
-                            string fuelType = _driver.FindElement(By.XPath($"{path}/a/div[2]/ul/li[3]/span[2]")).Text.Trim().ToLower();
-                            string engineSize = _driver.FindElement(By.XPath($"{path}/a/div[2]/ul/li[4]/span[2]")).Text.Trim();
-                            string price = _driver.FindElement(By.XPath($"{path}/a/div[2]/span")).Text.Trim();
+                            string location = _driver.FindElement(By.XPath($"{path}/a/div[2]/div[1]/span")).Text.Trim();
+                            string description = _driver.FindElement(By.XPath($"{path}/a/div[2]/p")).Text.Trim();
+                            string year = null;
 
-                            // Check if link exists in db.
-                            ArticleRepository articleRepo = new ArticleRepository();
-                            bool exists = articleRepo.Exists(x => x.Link == link);
-                            if (exists)
+                            try
                             {
-                                ArticleVersionRepository articleVersionRepo = new ArticleVersionRepository();
-                                ArticleVersion latestVersion = articleVersionRepo.Get(x => x.VirtualArticle.Link == link, x => x.Version);
-                                byte[] titleBytes = Encoding.ASCII.GetBytes(latestVersion.Title);
-                                byte[] locationBytes = Encoding.ASCII.GetBytes(latestVersion.Location);
-                                byte[] descriptionBytes = Encoding.ASCII.GetBytes(latestVersion.Description);
-                                byte[] yearBytes = Encoding.ASCII.GetBytes(latestVersion.Year.ToString());
-                                byte[] mileageBytes = Encoding.ASCII.GetBytes(latestVersion.Mileage.ToString());
-                                byte[] fuelTypeBytes = Encoding.ASCII.GetBytes(latestVersion.FuelType);
-                                byte[] engineSizeBytes = Encoding.ASCII.GetBytes(latestVersion.EngineSize.ToString());
-                                byte[] priceBytes = Encoding.ASCII.GetBytes(latestVersion.Price.ToString());
-                                byte[] dbBytes = CombineBytes(titleBytes, locationBytes, descriptionBytes, yearBytes, mileageBytes, fuelTypeBytes, engineSizeBytes, priceBytes);
-                                string dbHash = GenerateHash(dbBytes);
-
-                                // TODO: Compare dbHash agaisnt current hash for new version.
+                                year = _driver.FindElement(By.XPath($"{path}/a/div[2]/ul/li[1]/span[2]")).Text.Trim();
+                            }
+                            catch (Exception ex)
+                            {
+                                Log.Error("Could not get year.");
                             }
 
-                            // TODO: New article version.
+                            string mileage = null;
 
-                            // Set up regex.
-                            Regex removeNonNumeric = new Regex(@"[^\d]");
-                            Regex removeLineBreaks = new Regex(@"\r\n?|\n");
-                            Regex removeExcessiveSpaces = new Regex(@"\s+");
-                            Regex removeString = new Regex(@".*distance from search location.*miles ");
+                            try
+                            {
+                                mileage = _driver.FindElement(By.XPath($"{path}/a/div[2]/ul/li[2]/span[2]")).Text.Trim();
+                            }
+                            catch (Exception ex)
+                            {
+                                Log.Error("Could not get mileage.");
+                            }
 
-                            // TODO: Standardise the result set.
+                            string sellerType;
+                            string fuelType;
+                            string engineSize = null;
+
+                            string tradeTypeOrfuelType = null;
+                            string fuelTypeOrEngineSize = null;
+                            string engineSizeOrNothing = null;
+
+                            try
+                            {
+                                tradeTypeOrfuelType = _driver.FindElement(By.XPath($"{path}/a/div[2]/ul/li[3]/span[2]")).Text.Trim();
+                            }
+                            catch (Exception ex)
+                            {
+                                Log.Error("Could not get tradeTypeOrfuelType.");
+                            }
+
+                            try
+                            {
+                                fuelTypeOrEngineSize = _driver.FindElement(By.XPath($"{path}/a/div[2]/ul/li[4]/span[2]")).Text.Trim();
+                            }
+                            catch (Exception ex)
+                            {
+                                Log.Error("Could not get fuelTypeOrEngineSize.");
+                            }
+
+                            try
+                            {
+                                engineSizeOrNothing = _driver.FindElement(By.XPath($"{path}/a/div[2]/ul/li[5]/span[2]")).Text.Trim();
+                            }
+                            catch (Exception ex)
+                            {
+                                Log.Error("Could not get engineSizeOrNothing.");
+                            }
+
+                            if (tradeTypeOrfuelType != null && tradeTypeOrfuelType.Equals("Trade"))
+                            {
+                                sellerType = tradeTypeOrfuelType;
+                                fuelType = fuelTypeOrEngineSize;
+                                if (!String.IsNullOrWhiteSpace(engineSizeOrNothing)) engineSize = engineSizeOrNothing;
+                            }
+                            else
+                            {
+                                sellerType = "Private";
+                                fuelType = tradeTypeOrfuelType;
+                                if (!String.IsNullOrWhiteSpace(fuelTypeOrEngineSize)) engineSize = fuelTypeOrEngineSize;
+                            }
+
+                            string price = _driver.FindElement(By.XPath($"{path}/a/div[2]/span")).Text.Trim();
+
+                            // Standardise result.
+                            try
+                            {
+                                location = removeRedunantString.Replace(removeLineBreaks.Replace(location, " "), String.Empty);
+                            }
+                            catch (Exception ex)
+                            {
+                                // Ignore.
+                            }
+
+                            try
+                            {
+                                year = removeNonNumeric.Replace(year, String.Empty);
+                            }
+                            catch (Exception ex)
+                            {
+                                // Ignore.
+                            }
+
+                            try
+                            {
+                                mileage = removeNonNumeric.Replace(mileage, String.Empty);
+                            }
+                            catch (Exception ex)
+                            {
+                                // Ignore.
+                            }
+
+                            try
+                            {
+                                engineSize = removeNonNumeric.Replace(engineSize, String.Empty);
+                            }
+                            catch (Exception ex)
+                            {
+                                // Ignore.
+                            }
+
+                            try
+                            {
+                                price = removeNonNumeric.Replace(price, String.Empty);
+                            }
+                            catch (Exception ex)
+                            {
+                                // Ignore.
+                            }
+
+                            // Check if link exists in db.
+                            Article dbArticle = null;
+                            ArticleVersion dbArticleVersion = null;
+                            bool articleLinkExists = ArticleRepo.Exists(x => x.Link == link);
+
+                            if (articleLinkExists)
+                            {
+                                // Hash latest version of this article.
+                                dbArticleVersion = ArticleVersionRepo.Get(x => x.VirtualArticle.Link == link, x => x.VirtualArticle);
+                                dbArticle = dbArticleVersion.VirtualArticle;
+
+                                byte[] dbtitleBytes = Encoding.ASCII.GetBytes(dbArticleVersion.Title);
+                                byte[] dblocationBytes = Encoding.ASCII.GetBytes(dbArticleVersion.Location);
+                                byte[] dbdescriptionBytes = Encoding.ASCII.GetBytes(dbArticleVersion.Description);
+
+                                byte[] dbYearBytes = { };
+                                try
+                                {
+                                    dbYearBytes = Encoding.ASCII.GetBytes(dbArticleVersion.Year.ToString());
+                                }
+                                catch (Exception)
+                                {
+                                    // Ignore. 
+                                }
+
+                                byte[] dbmileageBytes = { };
+                                try
+                                {
+                                    dbmileageBytes = Encoding.ASCII.GetBytes(dbArticleVersion.Mileage.ToString());
+                                }
+                                catch (Exception)
+                                {
+                                    // Ignore. 
+                                }
+
+                                byte[] dbSellerTypeBytes = Encoding.ASCII.GetBytes(dbArticleVersion.SellerType);
+                                byte[] dbfuelTypeBytes = Encoding.ASCII.GetBytes(dbArticleVersion.FuelType);
+
+                                byte[] dbengineSizeBytes = { };
+                                try
+                                {
+                                    dbengineSizeBytes = Encoding.ASCII.GetBytes(dbArticleVersion.EngineSize.ToString());
+                                }
+                                catch (Exception)
+                                {
+                                    // Ignore. 
+                                }
+
+                                byte[] dbpriceBytes = Encoding.ASCII.GetBytes(dbArticleVersion.Price.ToString());
+                                byte[] dbBytes = CombineBytes(dbtitleBytes, dblocationBytes, dbdescriptionBytes,
+                                    dbYearBytes, dbmileageBytes, dbSellerTypeBytes, dbfuelTypeBytes, dbengineSizeBytes, dbpriceBytes);
+                                string dbHash = GenerateHash(dbBytes);
+
+                                // Hash fetched verison of this article.
+                                byte[] titleBytes = Encoding.ASCII.GetBytes(title);
+                                byte[] locationBytes = Encoding.ASCII.GetBytes(location);
+                                byte[] descriptionBytes = Encoding.ASCII.GetBytes(description);
+
+                                byte[] yearBytes = { };
+                                try
+                                {
+                                    yearBytes = Encoding.ASCII.GetBytes(year);
+                                }
+                                catch (Exception)
+                                {
+                                    // Ignore. 
+                                }
+
+                                byte[] mileageBytes = { };
+                                try
+                                {
+                                    mileageBytes = Encoding.ASCII.GetBytes(mileage);
+                                }
+                                catch (Exception)
+                                {
+                                    // Ignore. 
+                                }
+
+                                byte[] sellerTypeBytes = Encoding.ASCII.GetBytes(sellerType);
+                                byte[] fuelTypeBytes = Encoding.ASCII.GetBytes(fuelType);
+
+                                byte[] engineSizeBytes = { };
+                                try
+                                {
+                                    engineSizeBytes = Encoding.ASCII.GetBytes(engineSize);
+                                }
+                                catch (Exception)
+                                {
+                                    // Ignore. 
+                                }
+
+                                byte[] priceBytes = Encoding.ASCII.GetBytes(price);
+                                byte[] bytes = CombineBytes(titleBytes, locationBytes, descriptionBytes,
+                                    yearBytes, mileageBytes, sellerTypeBytes, fuelTypeBytes, engineSizeBytes, priceBytes);
+                                string hash = GenerateHash(bytes);
+
+                                // Skip if hashes are the same.
+                                if (String.Equals(dbHash, hash)) continue;
+                            }
+
+                            Article article = new Article();
+                            ArticleVersion articleVersion = new ArticleVersion();
+                            if (dbArticle == null)
+                            {
+                                // New article.
+                                article.Link = link;
+                                article.CarModelId = CarModelRepo.Get(x => x.Name.Equals("Clio")).Id;
+                                ArticleRepo.Create(article);
+                                articleVersion.ArticleId = article.Id;
+                                articleVersion.Version = 1; // Set version.
+                            }
+                            else
+                            {
+                                articleVersion.ArticleId = dbArticle.Id;
+                                articleVersion.Version = dbArticleVersion.Version + 1; // Increment version.
+                            }
+
+                            // New article version.
+                            articleVersion.Title = title;
+                            articleVersion.Location = location;
+                            articleVersion.Description = description;
+                            articleVersion.Year = year != null ? int.Parse(year) : (int?)null;
+                            articleVersion.Mileage = mileage != null ? int.Parse(mileage) : (int?)null;
+                            articleVersion.SellerType = sellerType;
+                            articleVersion.FuelType = fuelType;
+                            articleVersion.EngineSize = engineSize != null ? int.Parse(engineSize) : (int?)null;
+                            articleVersion.Price = int.Parse(price);
+                            ArticleVersionRepo.Create(articleVersion);
                         }
-                        catch (Exception) { } // Ignore.
+                        catch (Exception ex)
+                        {
+                            Log.Error(ex.GetBaseException());
+                        }
                     }
                 }
-                // TODO: List the results.
             }
             catch (Exception ex)
             {

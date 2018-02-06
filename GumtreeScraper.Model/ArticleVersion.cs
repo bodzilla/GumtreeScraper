@@ -24,13 +24,15 @@ namespace GumtreeScraper.Model
 
         public string Description { get; set; }
 
-        public int Year { get; set; }
+        public int? Year { get; set; }
 
-        public int Mileage { get; set; }
+        public int? Mileage { get; set; }
+
+        public string SellerType { get; set; }
 
         public string FuelType { get; set; }
 
-        public int EngineSize { get; set; }
+        public int? EngineSize { get; set; }
 
         public int Price { get; set; }
 
