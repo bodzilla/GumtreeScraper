@@ -29,7 +29,7 @@ namespace GumtreeScraper
 
         private static readonly Regex RemoveNonNumeric = new Regex(@"[^\d]");
         private static readonly Regex RemoveLineBreaks = new Regex(@"\r\n?|\n");
-        private static readonly Regex RemoveExcessLocationText = new Regex(@".*Distance from search location.* \| ");
+        private static readonly Regex RemoveExcessLocationText = new Regex(@".* \| ");
 
         private static string _cakeMake;
         private static string _carModel;
@@ -192,6 +192,7 @@ namespace GumtreeScraper
                             Article article = new Article();
                             ArticleVersion articleVersion = new ArticleVersion();
                             string articleState;
+
                             if (dbArticle == null)
                             {
                                 // New article.
@@ -283,7 +284,7 @@ namespace GumtreeScraper
             return combinedBytes;
         }
 
-        public static string ToTitleCase(string text)
+        private static string ToTitleCase(string text)
         {
             return CultureInfo.CurrentCulture.TextInfo.ToTitleCase(text.ToLower());
         }
