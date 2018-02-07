@@ -63,8 +63,8 @@ namespace GumtreeScraper
                 service.AddArgument("--webdriver-loglevel=NONE");
                 _driver = new PhantomJSDriver(service);
                 _driver.Manage().Window.Maximize(); // To capture all content.
-
-                WebDriverWait wait = new WebDriverWait(_driver, new TimeSpan(0, 0, _timeout));
+                _driver.Manage().Timeouts().PageLoad = new TimeSpan(0, 0, 5, 0); // 5 min page timeout.
+                WebDriverWait wait = new WebDriverWait(_driver, new TimeSpan(0, 0, _timeout)); // x min element wait timeout.
 
                 // Scrape results by paging through from oldest to latest page.
                 for (int i = pages; i >= 1; i--)
