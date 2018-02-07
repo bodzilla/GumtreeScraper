@@ -7,6 +7,7 @@ using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Web;
 using GumtreeScraper.Model;
 using GumtreeScraper.Repository;
 using log4net;
@@ -32,7 +33,7 @@ namespace GumtreeScraper
 
         private readonly IWebDriver _driver;
 
-        public GumtreeScraper(IReadOnlyList<string> args)
+        public GumtreeScraper(string p, string u)
         {
             string carMake = String.Empty;
             string carModel = String.Empty;
@@ -40,10 +41,10 @@ namespace GumtreeScraper
             try
             {
                 // Setting initial variables.
-                carMake = ToTitleCase(args[0]);
-                carModel = ToTitleCase(args[1]);
-                int pages = int.Parse(args[2]);
-                string url = args[3];
+                int pages = int.Parse(p);
+                string url = u.ToLower();
+                carMake = ToTitleCase(HttpUtility.ParseQueryString(url).Get("vehicle_make"));
+                carModel = ToTitleCase(HttpUtility.ParseQueryString(url).Get("vehicle_model"));
 
                 _log.Info($"Asserting existence of {carMake} {carModel} in database..");
 

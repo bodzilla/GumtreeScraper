@@ -15,15 +15,15 @@ namespace GumtreeScraper
             Log.Info("Retrieving runtime variables..");
 
             // Get ScrapeList.
-            IList<string[]> scrapeList = ConfigurationManager.AppSettings.AllKeys
+            string[][] scrapeList = ConfigurationManager.AppSettings.AllKeys
                 .Where(key => key.Contains("Scrape"))
-                .Select(key => ConfigurationManager.AppSettings[key].Split(' ')).ToArray()
-                .ToList();
+                .Select(key => ConfigurationManager.AppSettings[key].Split(' '))
+                .ToArray();
 
             // Run GumreeScraper for all lists.
             foreach (string[] list in scrapeList)
             {
-                new GumtreeScraper(list);
+                new GumtreeScraper(list[0], list[1]);
             }
             Log.Info("All lists have been scraped successfully, finished GumtreeScraper session.");
         }
