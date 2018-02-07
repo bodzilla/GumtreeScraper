@@ -115,7 +115,6 @@ namespace GumtreeScraper.Repository
             {
                 foreach (T item in items)
                 {
-                    item.DateAdded = DateTime.Now;
                     context.Entry(item).State = EntityState.Modified;
                 }
                 context.SaveChanges();
