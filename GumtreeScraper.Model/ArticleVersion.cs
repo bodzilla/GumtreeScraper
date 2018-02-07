@@ -10,6 +10,8 @@ namespace GumtreeScraper.Model
 
         public DateTime DateAdded { get; set; }
 
+        public string Posted { get; set; }
+
         public int ArticleId { get; set; }
 
         public int Version { get; set; }

@@ -30,6 +30,7 @@ namespace GumtreeScraper
         private static readonly Regex RemoveNonNumeric = new Regex(@"[^\d]");
         private static readonly Regex RemoveLineBreaks = new Regex(@"\r\n?|\n");
         private static readonly Regex RemoveExcessLocationText = new Regex(@".* \| ");
+        private static readonly Regex RemoveExcessAdPostedText = new Regex(@".*\n");
 
         private static string _carMake;
         private static string _carModel;
@@ -68,7 +69,7 @@ namespace GumtreeScraper
 
                 _wait = new WebDriverWait(_driver, new TimeSpan(0, 0, Timeout));
 
-                // Scrape results by paging through from oldest to latest.
+                // Scrape results by paging through from oldest to latest page.
                 for (int i = Pages; i >= 1; i--)
                 {
                     // Set page.
@@ -77,9 +78,9 @@ namespace GumtreeScraper
                     _driver.Url = currentPage;
                     _wait.Until(d => d.FindElement(By.XPath(@"//*[@id=""srp-results""]/div[1]"))); // Results div.
 
-                    // Find article results.
+                    // Find article results from oldest to newest article.
                     IList<IWebElement> results = _driver.FindElements(By.XPath(@"//*[a[@class=""listing-link""]]"));
-                    foreach (IWebElement result in results)
+                    foreach (IWebElement result in results.Reverse())
                     {
                         try
                         {
@@ -127,13 +128,17 @@ namespace GumtreeScraper
                                 if (!String.IsNullOrWhiteSpace(fuelTypeOrEngineSize)) engineSize = fuelTypeOrEngineSize;
                             }
 
+                            string posted = null;
+                            try { posted = _driver.FindElement(By.XPath($"{path}/a/div[2]/div[2]/span")).Text.Trim(); } catch (Exception) { Log.Debug("Could not get postedOn."); }
+
                             string price = _driver.FindElement(By.XPath($"{path}/a/div[2]/span")).Text.Trim();
 
-                            // Standardise results.
+                            // Cleanse results.
                             try { location = RemoveExcessLocationText.Replace(RemoveLineBreaks.Replace(location, " "), String.Empty); } catch (Exception) { }
                             try { year = RemoveNonNumeric.Replace(year, String.Empty); } catch (Exception) { }
                             try { mileage = RemoveNonNumeric.Replace(mileage, String.Empty); } catch (Exception) { }
                             try { engineSize = RemoveNonNumeric.Replace(engineSize, String.Empty); } catch (Exception) { }
+                            try { posted = RemoveExcessAdPostedText.Replace(posted, String.Empty); } catch (Exception) { }
                             try { price = RemoveNonNumeric.Replace(price, String.Empty); } catch (Exception) { }
 
                             // De-duplication.
@@ -151,20 +156,20 @@ namespace GumtreeScraper
                                 dbArticle = dbArticleVersion.VirtualArticle;
 
                                 // Hash db article version.
-                                byte[] dbtitleBytes = Encoding.ASCII.GetBytes(dbArticleVersion.Title);
-                                byte[] dblocationBytes = Encoding.ASCII.GetBytes(dbArticleVersion.Location);
-                                byte[] dbdescriptionBytes = Encoding.ASCII.GetBytes(dbArticleVersion.Description);
+                                byte[] dbTitleBytes = Encoding.ASCII.GetBytes(dbArticleVersion.Title);
+                                byte[] dbLocationBytes = Encoding.ASCII.GetBytes(dbArticleVersion.Location);
+                                byte[] dbDescriptionBytes = Encoding.ASCII.GetBytes(dbArticleVersion.Description);
                                 byte[] dbYearBytes = { };
                                 try { dbYearBytes = Encoding.ASCII.GetBytes(dbArticleVersion.Year.ToString()); } catch (Exception) { }
-                                byte[] dbmileageBytes = { };
-                                try { dbmileageBytes = Encoding.ASCII.GetBytes(dbArticleVersion.Mileage.ToString()); } catch (Exception) { }
+                                byte[] dbMileageBytes = { };
+                                try { dbMileageBytes = Encoding.ASCII.GetBytes(dbArticleVersion.Mileage.ToString()); } catch (Exception) { }
                                 byte[] dbSellerTypeBytes = Encoding.ASCII.GetBytes(dbArticleVersion.SellerType);
-                                byte[] dbfuelTypeBytes = { };
-                                try { dbfuelTypeBytes = Encoding.ASCII.GetBytes(dbArticleVersion.FuelType); } catch (Exception) { }
-                                byte[] dbengineSizeBytes = { };
-                                try { dbengineSizeBytes = Encoding.ASCII.GetBytes(dbArticleVersion.EngineSize.ToString()); } catch (Exception) { }
-                                byte[] dbpriceBytes = Encoding.ASCII.GetBytes(dbArticleVersion.Price.ToString());
-                                byte[] dbBytes = CombineBytes(dbtitleBytes, dblocationBytes, dbdescriptionBytes, dbYearBytes, dbmileageBytes, dbSellerTypeBytes, dbfuelTypeBytes, dbengineSizeBytes, dbpriceBytes);
+                                byte[] dbFuelTypeBytes = { };
+                                try { dbFuelTypeBytes = Encoding.ASCII.GetBytes(dbArticleVersion.FuelType); } catch (Exception) { }
+                                byte[] dbEngineSizeBytes = { };
+                                try { dbEngineSizeBytes = Encoding.ASCII.GetBytes(dbArticleVersion.EngineSize.ToString()); } catch (Exception) { }
+                                byte[] dbPriceBytes = Encoding.ASCII.GetBytes(dbArticleVersion.Price.ToString());
+                                byte[] dbBytes = CombineBytes(dbTitleBytes, dbLocationBytes, dbDescriptionBytes, dbYearBytes, dbMileageBytes, dbSellerTypeBytes, dbFuelTypeBytes, dbEngineSizeBytes, dbPriceBytes);
                                 string dbHash = GenerateHash(dbBytes);
 
                                 // Hash fetched verison of this article.
@@ -220,6 +225,7 @@ namespace GumtreeScraper
                             articleVersion.SellerType = sellerType;
                             articleVersion.FuelType = fuelType;
                             articleVersion.EngineSize = engineSize != null ? int.Parse(engineSize) : (int?)null;
+                            articleVersion.Posted = posted;
                             articleVersion.Price = int.Parse(price);
                             ArticleVersionRepo.Create(articleVersion);
                             Log.Info($"Saved new article version with {articleState} article.");
