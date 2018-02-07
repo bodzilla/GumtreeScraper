@@ -31,7 +31,7 @@ namespace GumtreeScraper
         private static readonly Regex RemoveLineBreaks = new Regex(@"\r\n?|\n");
         private static readonly Regex RemoveExcessLocationText = new Regex(@".* \| ");
 
-        private static string _cakeMake;
+        private static string _carMake;
         private static string _carModel;
         private static int _carModelId;
 
@@ -46,17 +46,17 @@ namespace GumtreeScraper
                 Log.Info("Retrieving runtime variables..");
 
                 // Setting up initial vars.
-                _cakeMake = ToTitleCase(args[0]);
+                _carMake = ToTitleCase(args[0]);
                 _carModel = ToTitleCase(args[1]);
                 _url = args[2];
 
                 // Check if car make and model exist in db.
-                bool carMakeExists = CarMakeRepo.Exists(x => x.Name.Equals(_cakeMake, StringComparison.CurrentCultureIgnoreCase));
+                bool carMakeExists = CarMakeRepo.Exists(x => x.Name.Equals(_carMake, StringComparison.CurrentCultureIgnoreCase));
                 bool carModelExists = CarModelRepo.Exists(x => x.Name.Equals(_carModel, StringComparison.CurrentCultureIgnoreCase));
 
                 // Create/get and set ids.
-                if (!carMakeExists) CarMakeRepo.Create(new CarMake { Name = _cakeMake });
-                if (!carModelExists) CarModelRepo.Create(new CarModel { Name = _carModel, CarMakeId = CarMakeRepo.Get(x => x.Name.Equals(_cakeMake)).Id });
+                if (!carMakeExists) CarMakeRepo.Create(new CarMake { Name = _carMake });
+                if (!carModelExists) CarModelRepo.Create(new CarModel { Name = _carModel, CarMakeId = CarMakeRepo.Get(x => x.Name.Equals(_carMake)).Id });
                 _carModelId = CarModelRepo.Get(x => x.Name.Equals(_carModel)).Id;
 
                 // Set up driver.
