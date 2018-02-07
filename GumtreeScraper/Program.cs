@@ -68,8 +68,8 @@ namespace GumtreeScraper
 
                 _wait = new WebDriverWait(_driver, new TimeSpan(0, 0, Timeout));
 
-                // Scrape results by paging through.
-                for (int i = 1; i <= Pages; i++)
+                // Scrape results by paging through from oldest to latest.
+                for (int i = Pages; i >= 1; i--)
                 {
                     // Set page.
                     string currentPage = $"{_url}&page={i}";
@@ -248,14 +248,6 @@ namespace GumtreeScraper
                                         {xname += ""["" + idx + ""]"";}path = ""/"" + xname + path;}return path;}function getElementIdx(elt){var count = 1;for (var sib = elt.previousSibling; sib;
                                         sib = sib.previousSibling){if(sib.nodeType == 1 && sib.tagName == elt.tagName){count++;}}return count;}return getElementXPath(arguments[0]).toLowerCase();";
             return (string)((IJavaScriptExecutor)_driver).ExecuteScript(javaScript, element);
-        }
-
-        private static string CleanText(string text)
-        {
-            HashSet<char> removeChars = new HashSet<char>(@"?&^$#@!()+-,:;<>’\|'-_*");
-            StringBuilder cleanText = new StringBuilder(text.Length);
-            foreach (char c in text) if (!removeChars.Contains(c)) cleanText.Append(c);
-            return cleanText.ToString();
         }
 
         private static string GenerateHash(byte[] data)
