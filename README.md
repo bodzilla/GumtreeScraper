@@ -9,3 +9,6 @@ Gumtree can be weird when paging through a result set. For some reason, it doesn
 
 **Querying the database:**
 - If you copy a result link from your web browswer in order to do a search for it in your database, keep in mind that some browser copy&paste do not "break" html entities.
+
+**Database structure with dependencies**:
+![alt text](https://github.com/bodzilla/GumtreeScraper/blob/master/GumtreeScraper/DatabaseModel.png)
