@@ -31,6 +31,8 @@ namespace GumtreeScraper
         private readonly Regex _removeLineBreaks = new Regex(@"\r\n?|\n");
         private readonly Regex _removeExcessLocationText = new Regex(@".* \| ");
 
+        private int _failedArticles;
+
         public GumtreeScraper(string p, string u)
         {
             string carMake = String.Empty;
@@ -287,6 +289,7 @@ namespace GumtreeScraper
                         }
                         catch (Exception ex)
                         {
+                            _failedArticles++;
                             _log.Error("Could not get web response.", ex.InnerException);
                             throw;
                         }
@@ -299,6 +302,7 @@ namespace GumtreeScraper
             }
             finally
             {
+                if (_failedArticles > 0) _log.Info($"{_failedArticles} articles failed.");
                 _log.Info($"Gumtree Scraper finished scraping for {carMake} {carModel}.");
             }
         }
