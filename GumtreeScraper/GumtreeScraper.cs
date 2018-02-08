@@ -87,6 +87,7 @@ namespace GumtreeScraper
                                             foreach (HtmlNode result in results)
                                             {
                                                 string path = result.XPath;
+
                                                 try
                                                 {
                                                     // Get article values.
