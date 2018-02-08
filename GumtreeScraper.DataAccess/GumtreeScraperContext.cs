@@ -17,10 +17,10 @@ namespace GumtreeScraper.DataAccess
         {
             modelBuilder.Conventions.Remove<OneToManyCascadeDeleteConvention>();
 
-            modelBuilder.Entity<CarMake>().ToTable("CarMakes");
-            modelBuilder.Entity<CarModel>().ToTable("CarModels");
-            modelBuilder.Entity<Article>().ToTable("Articles");
-            modelBuilder.Entity<ArticleVersion>().ToTable("ArticleVersions");
+            modelBuilder.Entity<CarMake>().ToTable("CarMake");
+            modelBuilder.Entity<CarModel>().ToTable("CarModel");
+            modelBuilder.Entity<Article>().ToTable("Article");
+            modelBuilder.Entity<ArticleVersion>().ToTable("ArticleVersion");
         }
 
         public DbSet<CarMake> CarMakes { get; set; }
