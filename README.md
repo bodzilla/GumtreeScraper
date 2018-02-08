@@ -19,4 +19,4 @@ As a result, I've found a link combination that'll always (hopefully) work, modi
 If you copy a result link from your web browswer in order to do a search for it in your database, keep in mind that some browser copy&paste do not "break" html entities.
 
 **Database structure with dependencies**:
-![diagram](https://github.com/bodzilla/GumtreeScraper/blob/master/GumtreeScraper.DataAccess/DatabaseModel.png)
+![db](https://github.com/bodzilla/GumtreeScraper/blob/master/GumtreeScraper.DataAccess/DatabaseModel.png)
