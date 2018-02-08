@@ -145,7 +145,7 @@ namespace GumtreeScraper
                                                     sellerType = String.IsNullOrEmpty(sellerType) ? "Private" : "Trade";
 
                                                     string daysOld = String.Empty;
-                                                    try { daysOld = result.SelectSingleNode($"{path}/a/div[2]/div[2]/span").InnerText.Trim(); } catch (Exception) { _log.Debug("Could not get postedOn."); }
+                                                    try { daysOld = result.SelectSingleNode($"{path}/a/div[2]/div[2]/span").InnerText.Trim(); } catch (Exception) { }
 
                                                     string price = result.SelectSingleNode($"{path}/a/div[2]/span").InnerText.Trim();
 
