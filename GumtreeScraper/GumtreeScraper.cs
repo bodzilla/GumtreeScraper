@@ -49,10 +49,8 @@ namespace GumtreeScraper
                 _log.Info($"Asserting existence of {carMake} {carModel} in database..");
 
                 // Check if car make and model exist in db.
-                bool carMakeExists =
-                    _carMakeRepo.Exists(x => x.Name.Equals(carMake, StringComparison.CurrentCultureIgnoreCase));
-                bool carModelExists =
-                    _carModelRepo.Exists(x => x.Name.Equals(carModel, StringComparison.CurrentCultureIgnoreCase));
+                bool carMakeExists = _carMakeRepo.Exists(x => x.Name.Equals(carMake, StringComparison.CurrentCultureIgnoreCase));
+                bool carModelExists = _carModelRepo.Exists(x => x.Name.Equals(carModel, StringComparison.CurrentCultureIgnoreCase));
 
                 // Create/get and set ids.
                 if (!carMakeExists) _carMakeRepo.Create(new CarMake { Name = carMake });
