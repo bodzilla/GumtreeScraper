@@ -3,7 +3,7 @@
 **Runtime params:**
 Not required anymore. See ScrapeList in app.config.
 
-**App config - ScrapeList:**
+**ScrapeList:**
 Multiple scrape lists can now be added in the latest version. You can add these settings in the app.config file, just make sure the key contains "Scrape". Some examples can be found in the app.config, where the first parameter is the number of pages to scrape on that particular vehicle, and the second parameter is the search URL.
 
 *Note: if your URL isn't "valid" - you might get very weird scrape results..*
@@ -18,5 +18,5 @@ As a result, I've found a link combination that'll always (hopefully) work, modi
 **Querying the database:**
 If you copy a result link from your web browswer in order to do a search for it in your database, keep in mind that some browser copy&paste do not "break" html entities.
 
-**Database structure with dependencies**:
+**Database structure**:
 ![db](https://github.com/bodzilla/GumtreeScraper/blob/master/GumtreeScraper.DataAccess/DatabaseModel.png)
