@@ -103,38 +103,46 @@ namespace GumtreeScraper
                                                     string location = result.SelectSingleNode($"{path}/a/div[2]/div[1]/span").InnerText.Trim();
                                                     string description = result.SelectSingleNode($"{path}/a/div[2]/p").InnerText.Trim();
 
-                                                    // Try catch these values as some may not exist.
+                                                    // Loop through property list as some may not exist.
                                                     string year = null;
-                                                    try { year = result.SelectSingleNode($"{path}/a/div[2]/ul/li[1]/span[2]").InnerText.Trim(); } catch (Exception) { _log.Debug("Could not get year."); }
-
                                                     string mileage = null;
-                                                    try { mileage = result.SelectSingleNode($"{path}/a/div[2]/ul/li[2]/span[2]").InnerText.Trim(); } catch (Exception) { _log.Debug("Could not get mileage."); }
-
-                                                    string tradeTypeOrfuelType = null;
-                                                    try { tradeTypeOrfuelType = result.SelectSingleNode($"{path}/a/div[2]/ul/li[3]/span[2]").InnerText.Trim(); } catch (Exception) { _log.Debug("Could not get tradeTypeOrfuelType."); }
-
-                                                    string fuelTypeOrEngineSize = null;
-                                                    try { fuelTypeOrEngineSize = result.SelectSingleNode($"{path}/a/div[2]/ul/li[4]/span[2]").InnerText.Trim(); } catch (Exception) { _log.Debug("Could not get fuelTypeOrEngineSize."); }
-
-                                                    string engineSizeOrNothing = null;
-                                                    try { engineSizeOrNothing = result.SelectSingleNode($"{path}/a/div[2]/ul/li[5]/span[2]").InnerText.Trim(); } catch (Exception) { _log.Debug("Could not get engineSizeOrNothing."); }
-
-                                                    string sellerType;
+                                                    string sellerType = null;
                                                     string fuelType = null;
                                                     string engineSize = null;
 
-                                                    if (tradeTypeOrfuelType != null && tradeTypeOrfuelType.Equals("Trade"))
+                                                    HtmlNodeCollection details = result.SelectNodes($"{path}/a/div[2]/ul/li");
+
+                                                    foreach (HtmlNode detail in details)
                                                     {
-                                                        sellerType = tradeTypeOrfuelType;
-                                                        if (!String.IsNullOrWhiteSpace(fuelTypeOrEngineSize)) fuelType = fuelTypeOrEngineSize;
-                                                        if (!String.IsNullOrWhiteSpace(engineSizeOrNothing)) engineSize = engineSizeOrNothing;
+                                                        HtmlNode span = detail.SelectSingleNode($"{detail.XPath}/span[2]");
+                                                        string spanText = span.InnerText.Trim();
+                                                        string property = span.GetAttributeValue("itemprop", String.Empty);
+
+                                                        switch (property)
+                                                        {
+                                                            case "dateVehicleFirstRegistered":
+                                                                year = spanText;
+                                                                break;
+
+                                                            case "mileageFromOdometer":
+                                                                mileage = spanText;
+                                                                break;
+
+                                                            case "": // Seller field appears as empty.
+                                                                sellerType = spanText.Equals("Trade") ? "Trade" : "Private";
+                                                                break;
+
+                                                            case "fuelType":
+                                                                fuelType = spanText;
+                                                                break;
+
+                                                            case "vehicleEngine":
+                                                                engineSize = spanText;
+                                                                break;
+                                                        }
                                                     }
-                                                    else
-                                                    {
-                                                        sellerType = "Private";
-                                                        if (!String.IsNullOrWhiteSpace(fuelTypeOrEngineSize)) fuelType = tradeTypeOrfuelType;
-                                                        if (!String.IsNullOrWhiteSpace(fuelTypeOrEngineSize)) engineSize = fuelTypeOrEngineSize;
-                                                    }
+
+                                                    sellerType = String.IsNullOrEmpty(sellerType) ? "Private" : "Trade";
 
                                                     string daysOld = String.Empty;
                                                     try { daysOld = result.SelectSingleNode($"{path}/a/div[2]/div[2]/span").InnerText.Trim(); } catch (Exception) { _log.Debug("Could not get postedOn."); }
@@ -167,8 +175,16 @@ namespace GumtreeScraper
                                                         // Set existing article version to latest version.
                                                         dbArticleVersion = _articleVersionRepo.GetByDesc(x => x.VirtualArticle.Link == link, x => x.VirtualArticle, x => x.Id);
 
-                                                        // Set existing article.
-                                                        dbArticle = dbArticleVersion.VirtualArticle;
+                                                        try
+                                                        {
+                                                            // Set existing article.
+                                                            dbArticle = dbArticleVersion.VirtualArticle;
+                                                        }
+                                                        catch (Exception)
+                                                        {
+                                                            _log.Error("Could not get dbArticle.");
+                                                            continue;
+                                                        }
 
                                                         // Hash db article version.
                                                         byte[] dbTitleBytes = Encoding.ASCII.GetBytes(dbArticleVersion.Title);
