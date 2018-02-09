@@ -157,12 +157,12 @@ namespace GumtreeScraper
                                                     }
 
                                                     // Cleanse results.
-                                                    try { location = _removeExcessLocationText.Replace(_removeLineBreaks.Replace(location, " "), String.Empty); } catch (Exception) { }
-                                                    try { year = _removeNonNumeric.Replace(year, String.Empty); } catch (Exception) { }
-                                                    try { mileage = _removeNonNumeric.Replace(mileage, String.Empty); } catch (Exception) { }
-                                                    try { engineSize = _removeNonNumeric.Replace(engineSize, String.Empty); } catch (Exception) { }
-                                                    try { daysOld = _removeNonNumeric.Replace(daysOld, String.Empty); } catch (Exception) { }
-                                                    try { price = _removeNonNumeric.Replace(price, String.Empty); } catch (Exception) { }
+                                                    if (!String.IsNullOrWhiteSpace(location)) location = _removeExcessLocationText.Replace(_removeLineBreaks.Replace(location, " "), String.Empty);
+                                                    if (!String.IsNullOrWhiteSpace(year)) year = _removeNonNumeric.Replace(year, String.Empty);
+                                                    if (!String.IsNullOrWhiteSpace(mileage)) mileage = _removeNonNumeric.Replace(mileage, String.Empty);
+                                                    if (!String.IsNullOrWhiteSpace(engineSize)) engineSize = _removeNonNumeric.Replace(engineSize, String.Empty);
+                                                    if (!String.IsNullOrWhiteSpace(daysOld)) daysOld = _removeNonNumeric.Replace(daysOld, String.Empty);
+                                                    price = _removeNonNumeric.Replace(price, String.Empty);
 
                                                     // De-duplication.
                                                     // First, check if article link exists in db.
@@ -191,14 +191,14 @@ namespace GumtreeScraper
                                                         byte[] dbLocationBytes = Encoding.ASCII.GetBytes(dbArticleVersion.Location);
                                                         byte[] dbDescriptionBytes = Encoding.ASCII.GetBytes(dbArticleVersion.Description);
                                                         byte[] dbYearBytes = { };
-                                                        try { dbYearBytes = Encoding.ASCII.GetBytes(dbArticleVersion.Year.ToString()); } catch (Exception) { }
+                                                        if (!String.IsNullOrWhiteSpace(dbArticleVersion.Year.ToString())) dbYearBytes = Encoding.ASCII.GetBytes(dbArticleVersion.Year.ToString());
                                                         byte[] dbMileageBytes = { };
-                                                        try { dbMileageBytes = Encoding.ASCII.GetBytes(dbArticleVersion.Mileage.ToString()); } catch (Exception) { }
+                                                        if (!String.IsNullOrWhiteSpace(dbArticleVersion.Mileage.ToString())) dbMileageBytes = Encoding.ASCII.GetBytes(dbArticleVersion.Mileage.ToString());
                                                         byte[] dbSellerTypeBytes = Encoding.ASCII.GetBytes(dbArticleVersion.SellerType);
                                                         byte[] dbFuelTypeBytes = { };
-                                                        try { dbFuelTypeBytes = Encoding.ASCII.GetBytes(dbArticleVersion.FuelType); } catch (Exception) { }
+                                                        if (!String.IsNullOrWhiteSpace(dbArticleVersion.FuelType)) dbFuelTypeBytes = Encoding.ASCII.GetBytes(dbArticleVersion.FuelType);
                                                         byte[] dbEngineSizeBytes = { };
-                                                        try { dbEngineSizeBytes = Encoding.ASCII.GetBytes(dbArticleVersion.EngineSize.ToString()); } catch (Exception) { }
+                                                        if (!String.IsNullOrWhiteSpace(dbArticleVersion.EngineSize.ToString())) dbEngineSizeBytes = Encoding.ASCII.GetBytes(dbArticleVersion.EngineSize.ToString());
                                                         byte[] dbPriceBytes = Encoding.ASCII.GetBytes(dbArticleVersion.Price.ToString());
                                                         byte[] dbBytes = CombineBytes(dbTitleBytes, dbLocationBytes, dbDescriptionBytes, dbYearBytes, dbMileageBytes, dbSellerTypeBytes, dbFuelTypeBytes, dbEngineSizeBytes, dbPriceBytes);
                                                         string dbHash = GenerateHash(dbBytes);
@@ -208,14 +208,14 @@ namespace GumtreeScraper
                                                         byte[] locationBytes = Encoding.ASCII.GetBytes(location);
                                                         byte[] descriptionBytes = Encoding.ASCII.GetBytes(description);
                                                         byte[] yearBytes = { };
-                                                        try { yearBytes = Encoding.ASCII.GetBytes(year); } catch (Exception) { }
+                                                        if (!String.IsNullOrWhiteSpace(year)) yearBytes = Encoding.ASCII.GetBytes(year);
                                                         byte[] mileageBytes = { };
-                                                        try { mileageBytes = Encoding.ASCII.GetBytes(mileage); } catch (Exception) { }
+                                                        if (!String.IsNullOrWhiteSpace(mileage)) mileageBytes = Encoding.ASCII.GetBytes(mileage);
                                                         byte[] sellerTypeBytes = Encoding.ASCII.GetBytes(sellerType);
                                                         byte[] fuelTypeBytes = { };
-                                                        try { fuelTypeBytes = Encoding.ASCII.GetBytes(fuelType); } catch (Exception) { }
+                                                        if (!String.IsNullOrWhiteSpace(fuelType)) fuelTypeBytes = Encoding.ASCII.GetBytes(fuelType);
                                                         byte[] engineSizeBytes = { };
-                                                        try { engineSizeBytes = Encoding.ASCII.GetBytes(engineSize); } catch (Exception) { }
+                                                        if (!String.IsNullOrWhiteSpace(engineSize)) engineSizeBytes = Encoding.ASCII.GetBytes(engineSize);
                                                         byte[] priceBytes = Encoding.ASCII.GetBytes(price);
                                                         byte[] bytes = CombineBytes(titleBytes, locationBytes, descriptionBytes, yearBytes, mileageBytes, sellerTypeBytes, fuelTypeBytes, engineSizeBytes, priceBytes);
                                                         string hash = GenerateHash(bytes);
