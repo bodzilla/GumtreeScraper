@@ -37,8 +37,8 @@ namespace GumtreeScraper
             }
             finally
             {
-                Log.Info("Finished GumtreeScraper session.");
-                Thread.Sleep(3000);
+                Log.Info("Finished GumtreeScraper session. Exiting program..");
+                Thread.Sleep(10000);
                 if (_failed) Environment.Exit(1);
                 Environment.Exit(0);
             }

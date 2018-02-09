@@ -183,6 +183,7 @@ namespace GumtreeScraper
                                                         catch (Exception)
                                                         {
                                                             _log.Error("Could not get dbArticle.");
+                                                            _articleRepo.Delete(dbArticle); // Remove from db.
                                                             continue;
                                                         }
 
