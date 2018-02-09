@@ -84,7 +84,7 @@ namespace GumtreeScraper
                                             doc.LoadHtml(data);
                                             HtmlNodeCollection results = doc.DocumentNode.SelectNodes(@"//*[a[@class=""listing-link""]]");
 
-                                            foreach (HtmlNode result in results)
+                                            foreach (HtmlNode result in results.Reverse())
                                             {
                                                 string path = result.XPath;
 
@@ -102,6 +102,20 @@ namespace GumtreeScraper
                                                     string title = result.SelectSingleNode($"{path}/a/div[2]/h2").InnerText.Trim();
                                                     string location = result.SelectSingleNode($"{path}/a/div[2]/div[1]/span").InnerText.Trim();
                                                     string description = result.SelectSingleNode($"{path}/a/div[2]/p").InnerText.Trim();
+
+                                                    // Thumbnail link could be in either of these tags.
+                                                    string thumbnail = null;
+
+                                                    try
+                                                    {
+                                                        if (!String.IsNullOrEmpty(result.SelectSingleNode($"{path}/a/div[1]/div/img").GetAttributeValue("src", null))) thumbnail = result.SelectSingleNode($"{path}/a/div[1]/div/img").GetAttributeValue("src", null);
+                                                        else if (!String.IsNullOrEmpty(result.SelectSingleNode($"{path}/a/div[1]/div/img").GetAttributeValue("data-lazy", null))) thumbnail = result.SelectSingleNode($"{path}/a/div[1]/div/img").GetAttributeValue("data-lazy", null);
+                                                    }
+                                                    catch (Exception)
+                                                    {
+                                                        if (!String.IsNullOrWhiteSpace(result.SelectSingleNode($"{path}/a/div[1]/div[1]/div/img").GetAttributeValue("data-lazy", null))) thumbnail = result.SelectSingleNode($"{path}/a/div[1]/div[1]/div/img").GetAttributeValue("data-lazy", null);
+                                                        else if (!String.IsNullOrWhiteSpace(result.SelectSingleNode($"{path}/a/div[1]/div[1]/div/img").GetAttributeValue("src", null))) thumbnail = result.SelectSingleNode($"{path}/a/div[1]/div[1]/div/img").GetAttributeValue("src", null);
+                                                    }
 
                                                     // Loop through property list as some may not exist.
                                                     string year = null;
@@ -227,6 +241,14 @@ namespace GumtreeScraper
                                                                 dbArticleVersion.DaysOld = int.Parse(daysOld);
                                                                 _articleVersionRepo.Update(dbArticleVersion);
                                                             }
+
+                                                            // Update thumbnail.
+                                                            if (!String.Equals(dbArticle.Thumbnail, thumbnail))
+                                                            {
+                                                                dbArticle.Thumbnail = thumbnail;
+                                                                _articleRepo.Update(dbArticle);
+                                                            }
+
                                                             _log.Info("Skipped duplicate article.");
                                                             continue;
                                                         }
@@ -242,6 +264,7 @@ namespace GumtreeScraper
                                                         // New article.
                                                         articleState = "new";
                                                         article.Link = link;
+                                                        article.Thumbnail = thumbnail;
                                                         article.CarModelId = carModelId;
                                                         _articleRepo.Create(article);
                                                         articleVersion.ArticleId = article.Id; // Link new article.
