@@ -172,18 +172,15 @@ namespace GumtreeScraper
 
                                                     if (articleLinkExists)
                                                     {
-                                                        // Set existing article version to latest version.
-                                                        dbArticleVersion = _articleVersionRepo.GetByDesc(x => x.VirtualArticle.Link == link, x => x.VirtualArticle, x => x.Id);
-
                                                         try
                                                         {
-                                                            // Set existing article.
-                                                            dbArticle = dbArticleVersion.VirtualArticle;
+                                                            // Set existing article and latest article version.
+                                                            dbArticle = _articleRepo.Get(x => x.Link == link, x => x.VirtualArticleVersions);
+                                                            dbArticleVersion = dbArticle.VirtualArticleVersions.OrderByDescending(x => x.Version).FirstOrDefault();
                                                         }
                                                         catch (Exception)
                                                         {
-                                                            _log.Error("Could not get dbArticle.");
-                                                            _articleRepo.Delete(dbArticle); // Remove from db.
+                                                            _log.Error("Could not get dbArticle/dbArticleVersion.");
                                                             continue;
                                                         }
 

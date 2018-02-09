@@ -37,23 +37,11 @@ namespace GumtreeScraper.Repository
 
         public void Create(params CarModel[] carModels)
         {
-            // Check for duplicates before creating.
-            foreach (CarModel carModel in carModels)
-            {
-                bool carModelExists = Exists(x => x.Name == carModel.Name);
-                if (carModelExists) throw new ArgumentException("Car Model exists.");
-            }
             _repository.Create(carModels);
         }
 
         public void Update(params CarModel[] carModels)
         {
-            // Check for duplicates before updating.
-            foreach (CarModel carModel in carModels)
-            {
-                bool carModelExists = Exists(x => x.Name == carModel.Name);
-                if (carModelExists) throw new ArgumentException("Car Model exists.");
-            }
             _repository.Update(carModels);
         }
 

@@ -53,24 +53,6 @@ namespace GumtreeScraper.Repository
             return list;
         }
 
-        public T GetByDesc(Func<T, bool> where, Expression<Func<T, object>> navigationProperty, Func<T, object> orderProperty)
-        {
-            T item;
-            using (var context = new GumtreeScraperContext())
-            {
-                IQueryable<T> dbQuery = context.Set<T>();
-
-                // Eager loading.
-                dbQuery = dbQuery.Include(navigationProperty);
-
-                item = dbQuery
-                    .AsNoTracking().AsEnumerable() // Don't track any changes for the selected item.
-                    .OrderByDescending(orderProperty) // Order by desc.
-                    .FirstOrDefault(where); // Apply where clause.
-            }
-            return item;
-        }
-
         public T Get(Func<T, bool> where, params Expression<Func<T, object>>[] navigationProperties)
         {
             T item;

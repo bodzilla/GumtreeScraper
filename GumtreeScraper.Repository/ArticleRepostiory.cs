@@ -37,23 +37,11 @@ namespace GumtreeScraper.Repository
 
         public void Create(params Article[] articles)
         {
-            // Check for duplicates before creating.
-            foreach (Article article in articles)
-            {
-                bool articleExists = Exists(x => x.Link == article.Link);
-                if (articleExists) throw new ArgumentException("Article exists.");
-            }
             _repository.Create(articles);
         }
 
         public void Update(params Article[] articles)
         {
-            // Check for duplicates before updating.
-            foreach (Article article in articles)
-            {
-                bool articleExists = Exists(x => x.Link == article.Link);
-                if (articleExists) throw new ArgumentException("Article exists.");
-            }
             _repository.Update(articles);
         }
 
