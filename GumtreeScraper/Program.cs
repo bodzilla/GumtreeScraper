@@ -2,6 +2,7 @@
 using System.Configuration;
 using System.Linq;
 using System.Reflection;
+using System.Threading;
 using log4net;
 
 namespace GumtreeScraper
@@ -9,6 +10,7 @@ namespace GumtreeScraper
     internal class Program
     {
         private static readonly ILog Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        private static bool _failed;
 
         private static void Main()
         {
@@ -27,11 +29,18 @@ namespace GumtreeScraper
                 {
                     new GumtreeScraper(list[0], list[1]);
                 }
-                Log.Info("All lists have been scraped successfully, finished GumtreeScraper session.");
             }
             catch (Exception ex)
             {
+                _failed = true;
                 Log.Fatal("Could not run GumtreeScraper.", ex.GetBaseException());
+            }
+            finally
+            {
+                Log.Info("Finished GumtreeScraper session.");
+                Thread.Sleep(3000);
+                if (_failed) Environment.Exit(1);
+                Environment.Exit(0);
             }
         }
     }
