@@ -50,9 +50,8 @@ namespace GumtreeScraper
                 carMake = ToTitleCase(HttpUtility.ParseQueryString(url).Get("vehicle_make"));
                 carModel = ToTitleCase(HttpUtility.ParseQueryString(url).Get("vehicle_model"));
 
-                _log.Info($"Asserting existence of {carMake} {carModel} in database..");
-
                 // Check if car make and model exist in db.
+                _log.Info($"Asserting existence of {carMake} {carModel} in database..");
                 bool carMakeExists = _carMakeRepo.Exists(x => x.Name.Equals(carMake, StringComparison.CurrentCultureIgnoreCase));
                 bool carModelExists = _carModelRepo.Exists(x => x.Name.Equals(carModel, StringComparison.CurrentCultureIgnoreCase));
 
@@ -62,6 +61,7 @@ namespace GumtreeScraper
                 int carModelId = _carModelRepo.Get(x => x.Name.Equals(carModel)).Id;
 
                 // Get all article links.
+                _log.Info("Retrieving indexes..");
                 _articleList.UnionWith(_articleRepo.GetAll(x => x.VirtualArticleVersions));
                 _articleLinksList.UnionWith(_articleRepo.GetAll().ToList().Select(x => x.Link));
 
