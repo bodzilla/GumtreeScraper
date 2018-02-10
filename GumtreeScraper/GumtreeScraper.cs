@@ -60,7 +60,7 @@ namespace GumtreeScraper
                 if (!carModelExists) _carModelRepo.Create(new CarModel { Name = carModel, CarMakeId = _carMakeRepo.Get(x => x.Name.Equals(carMake)).Id });
                 int carModelId = _carModelRepo.Get(x => x.Name.Equals(carModel)).Id;
 
-                // Get all article links.
+                // Get all articles and article links.
                 _log.Info("Retrieving indexes..");
                 _articleList.UnionWith(_articleRepo.GetAll(x => x.VirtualArticleVersions));
                 _articleLinksList.UnionWith(_articleRepo.GetAll().ToList().Select(x => x.Link));
@@ -299,7 +299,7 @@ namespace GumtreeScraper
                                                     articleVersion.Price = int.Parse(price);
                                                     _articleVersionRepo.Create(articleVersion);
 
-                                                    // Add to HashSets.
+                                                    // Add to hash sets.
                                                     if (dbArticle == null)
                                                     {
                                                         article.VirtualArticleVersions.Add(articleVersion);
