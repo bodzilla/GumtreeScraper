@@ -113,8 +113,8 @@ namespace GumtreeScraper
                                                     }
                                                     catch (Exception)
                                                     {
-                                                        if (!String.IsNullOrWhiteSpace(result.SelectSingleNode($"{path}/a/div[1]/div[1]/div/img").GetAttributeValue("data-lazy", null))) thumbnail = result.SelectSingleNode($"{path}/a/div[1]/div[1]/div/img").GetAttributeValue("data-lazy", null);
-                                                        else if (!String.IsNullOrWhiteSpace(result.SelectSingleNode($"{path}/a/div[1]/div[1]/div/img").GetAttributeValue("src", null))) thumbnail = result.SelectSingleNode($"{path}/a/div[1]/div[1]/div/img").GetAttributeValue("src", null);
+                                                        if (!String.IsNullOrWhiteSpace(result.SelectSingleNode($"{path}/a/div[1]/div[1]/div/img").GetAttributeValue("src", null))) thumbnail = result.SelectSingleNode($"{path}/a/div[1]/div[1]/div/img").GetAttributeValue("src", null);
+                                                        else if (!String.IsNullOrWhiteSpace(result.SelectSingleNode($"{path}/a/div[1]/div[1]/div/img").GetAttributeValue("data-lazy", null))) thumbnail = result.SelectSingleNode($"{path}/a/div[1]/div[1]/div/img").GetAttributeValue("data-lazy", null);
                                                     }
 
                                                     // Loop through property list as some may not exist.
