@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Configuration;
 using System.Globalization;
 using System.IO;
@@ -31,6 +32,9 @@ namespace GumtreeScraper
         private readonly Regex _removeLineBreaks = new Regex(@"\r\n?|\n");
         private readonly Regex _removeExcessLocationText = new Regex(@".* \| ");
 
+        private readonly HashSet<Article> _articleList = new HashSet<Article>();
+        private readonly HashSet<string> _articleLinksList = new HashSet<string>();
+
         private int _failedArticles;
 
         public GumtreeScraper(string p, string u)
@@ -56,6 +60,10 @@ namespace GumtreeScraper
                 if (!carMakeExists) _carMakeRepo.Create(new CarMake { Name = carMake });
                 if (!carModelExists) _carModelRepo.Create(new CarModel { Name = carModel, CarMakeId = _carMakeRepo.Get(x => x.Name.Equals(carMake)).Id });
                 int carModelId = _carModelRepo.Get(x => x.Name.Equals(carModel)).Id;
+
+                // Get all article links.
+                _articleList.UnionWith(_articleRepo.GetAll(x => x.VirtualArticleVersions));
+                _articleLinksList.UnionWith(_articleRepo.GetAll().ToList().Select(x => x.Link));
 
                 // Scrape results by paging through from oldest to latest page.
                 for (int i = pages; i >= 1; i--)
@@ -182,14 +190,14 @@ namespace GumtreeScraper
                                                     // First, check if article link exists in db.
                                                     ArticleVersion dbArticleVersion = null;
                                                     Article dbArticle = null;
-                                                    bool articleLinkExists = _articleRepo.Exists(x => x.Link == link);
+                                                    bool articleLinkExists = _articleLinksList.Contains(link);
 
                                                     if (articleLinkExists)
                                                     {
                                                         try
                                                         {
                                                             // Set existing article and latest article version.
-                                                            dbArticle = _articleRepo.Get(x => x.Link == link, x => x.VirtualArticleVersions);
+                                                            dbArticle = _articleList.SingleOrDefault(x => x.Link == link);
                                                             dbArticleVersion = dbArticle.VirtualArticleVersions.OrderByDescending(x => x.Version).FirstOrDefault();
                                                         }
                                                         catch (Exception)
@@ -290,6 +298,20 @@ namespace GumtreeScraper
                                                     articleVersion.DaysOld = int.Parse(daysOld);
                                                     articleVersion.Price = int.Parse(price);
                                                     _articleVersionRepo.Create(articleVersion);
+
+                                                    // Add to HashSets.
+                                                    if (dbArticle == null)
+                                                    {
+                                                        article.VirtualArticleVersions.Add(articleVersion);
+                                                        _articleList.Add(article);
+                                                        _articleLinksList.Add(link);
+                                                    }
+                                                    else
+                                                    {
+                                                        _articleList.Remove(dbArticle);
+                                                        dbArticle.VirtualArticleVersions.Add(articleVersion);
+                                                        _articleList.Add(dbArticle);
+                                                    }
                                                     _log.Info($"Saved new article version with {articleState} article.");
                                                 }
                                                 catch (Exception ex)
