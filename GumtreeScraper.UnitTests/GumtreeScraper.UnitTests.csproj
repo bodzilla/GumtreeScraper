@@ -45,7 +45,6 @@
       <HintPath>..\packages\NUnit.3.9.0\lib\net45\nunit.framework.dll</HintPath>
     </Reference>
     <Reference Include="System" />
-    <Reference Include="System.ComponentModel.DataAnnotations" />
     <Reference Include="System.Data" />
   </ItemGroup>
   <Choose>
@@ -54,21 +53,13 @@
         <Reference Include="Microsoft.VisualStudio.QualityTools.UnitTestFramework, Version=10.1.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
       </ItemGroup>
     </When>
-    <Otherwise>
-      <ItemGroup>
-        <Reference Include="Microsoft.VisualStudio.QualityTools.UnitTestFramework" />
-      </ItemGroup>
-    </Otherwise>
+    <Otherwise />
   </Choose>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RepositoryTests\CarMakeRespositoryTests.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\GumtreeScraper.DataAccess\GumtreeScraper.DataAccess.csproj">
-      <Project>{1d6e2c05-cbef-4b07-934c-c0da2b66da92}</Project>
-      <Name>GumtreeScraper.DataAccess</Name>
-    </ProjectReference>
     <ProjectReference Include="..\GumtreeScraper.Model\GumtreeScraper.Model.csproj">
       <Project>{0cddba37-5cbe-42dd-9a94-3eb5136a9878}</Project>
       <Name>GumtreeScraper.Model</Name>
