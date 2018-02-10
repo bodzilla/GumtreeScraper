@@ -35,7 +35,7 @@ namespace GumtreeScraper
         private readonly HashSet<Article> _articleList = new HashSet<Article>();
         private readonly HashSet<string> _articleLinksList = new HashSet<string>();
 
-        private int _failedArticles;
+        private readonly int _failedArticles;
 
         public GumtreeScraper(string p, string u)
         {
