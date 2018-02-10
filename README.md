@@ -17,4 +17,4 @@ As a result, I've found a link combination that'll always (hopefully) work, modi
 If you copy a result link from your web browswer in order to do a search for it in your database, keep in mind that some browsers URL parsers encode/decode HTML entities, which may affect searching on article links if they don't match up properly.
 
 **Database structure**:
-![db](https://github.com/bodzilla/GumtreeScraper/blob/master/GumtreeScraper.DataAccess/DatabaseModel.png)
+![database](https://github.com/bodzilla/GumtreeScraper/blob/master/GumtreeScraper.DataAccess/DatabaseModel.png)
