@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Configuration;
 using System.Linq;
 using System.Reflection;
@@ -12,6 +13,8 @@ namespace GumtreeScraper
         private static readonly ILog Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private static bool _failed;
 
+        public static readonly IList<string> ArticleViewList = new List<string>();
+
         private static void Main()
         {
             try
@@ -24,11 +27,15 @@ namespace GumtreeScraper
                     .Select(key => ConfigurationManager.AppSettings[key].Split(' '))
                     .ToArray();
 
-                // Run GumreeScraper for all lists.
+                // Run for all search lists.
+                Log.Info("Starting Search List Scraper..");
                 foreach (string[] list in scrapeList)
                 {
-                    new GumtreeScraper(list[0], list[1]);
+                    new SearchListScraper(list[0], list[1]);
                 }
+
+                // Run for all article view links.
+                if (ArticleViewList.Count > 0) new ArticleViewScraper(ArticleViewList);
             }
             catch (Exception ex)
             {

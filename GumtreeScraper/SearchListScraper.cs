@@ -18,7 +18,7 @@ using log4net;
 
 namespace GumtreeScraper
 {
-    public class GumtreeScraper
+    public class SearchListScraper
     {
         private readonly ILog _log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private readonly int _timeout = int.Parse(ConfigurationManager.AppSettings["TimeoutSecs"]);
@@ -37,7 +37,7 @@ namespace GumtreeScraper
 
         private readonly int _failedArticles;
 
-        public GumtreeScraper(string p, string u)
+        public SearchListScraper(string p, string u)
         {
             string carMake = String.Empty;
             string carModel = String.Empty;
@@ -65,7 +65,7 @@ namespace GumtreeScraper
                 _articleList.UnionWith(_articleRepo.GetAll(x => x.VirtualArticleVersions));
                 _articleLinksList.UnionWith(_articleRepo.GetAll().ToList().Select(x => x.Link));
 
-                // Scrape results by paging through from oldest to latest page.
+                // Scrape search list by paging through from oldest to latest page.
                 for (int i = pages; i >= 1; i--)
                 {
                     using (HttpClient client = new HttpClient())
@@ -166,15 +166,20 @@ namespace GumtreeScraper
 
                                                     sellerType = String.IsNullOrEmpty(sellerType) ? "Private" : "Trade";
 
-                                                    string daysOld = String.Empty;
+                                                    string daysOld = null;
                                                     try { daysOld = result.SelectSingleNode($"{path}/a/div[2]/div[2]/span").InnerText.Trim(); } catch (Exception) { }
 
                                                     string price = result.SelectSingleNode($"{path}/a/div[2]/span").InnerText.Trim();
 
                                                     // Standardise posted value.
-                                                    if (!String.IsNullOrEmpty(daysOld) && !daysOld.Contains("days") && !daysOld.Contains("day")
-                                                        && daysOld.Equals("URGENT", StringComparison.CurrentCultureIgnoreCase))
+                                                    if (String.IsNullOrEmpty(daysOld))
                                                     {
+                                                        // if it's empty, add to view list so we can fetch the days old later.
+                                                        if (!Program.ArticleViewList.Contains(link)) Program.ArticleViewList.Add(link);
+                                                    }
+                                                    else if (!daysOld.Contains("days") && !daysOld.Contains("day"))
+                                                    {
+                                                        // If it's not empty doesn't contain these days, it must mean it's from today.
                                                         daysOld = "0";
                                                     }
 
@@ -250,21 +255,6 @@ namespace GumtreeScraper
                                                                 _articleRepo.Update(dbArticle);
                                                             }
 
-                                                            // Update the days old for all versions.
-                                                            daysOld = DateTime.Now.Subtract(dbArticleVersion.DateAdded).Days.ToString();
-                                                            if (!String.Equals(daysOld, "0"))
-                                                            {
-                                                                IList<ArticleVersion> dbarticleVersions = new List<ArticleVersion>(dbArticle.VirtualArticleVersions);
-                                                                foreach (ArticleVersion dbVersion in dbarticleVersions)
-                                                                {
-                                                                    if (!String.Equals(dbVersion.DaysOld.ToString(), daysOld))
-                                                                    {
-                                                                        dbVersion.DaysOld = int.Parse(daysOld);
-                                                                        _articleVersionRepo.Update(dbVersion);
-                                                                    }
-                                                                }
-                                                            }
-
                                                             _log.Info("Skipped duplicate article.");
                                                             continue;
                                                         }
@@ -282,6 +272,7 @@ namespace GumtreeScraper
                                                         article.Link = link;
                                                         article.Thumbnail = thumbnail;
                                                         article.CarModelId = carModelId;
+                                                        article.DaysOld = daysOld != null ? int.Parse(daysOld) : (int?)null;
                                                         _articleRepo.Create(article);
                                                         articleVersion.ArticleId = article.Id; // Link new article.
                                                         articleVersion.Version = 1; // Set first version.
@@ -292,11 +283,6 @@ namespace GumtreeScraper
                                                         articleState = "existing";
                                                         articleVersion.ArticleId = dbArticle.Id; // Link existing article.
                                                         articleVersion.Version = dbArticleVersion.Version + 1; // Increment version.
-                                                        if (String.Equals(daysOld, "0") && dbArticleVersion.DaysOld != 0)
-                                                        {
-                                                            // If days old couldn't be picked up, but exists in a prevoius version, set this instead.
-                                                            articleVersion.DaysOld = dbArticleVersion.DaysOld;
-                                                        }
                                                     }
 
                                                     // Set values and save.
@@ -308,7 +294,6 @@ namespace GumtreeScraper
                                                     articleVersion.SellerType = sellerType;
                                                     articleVersion.FuelType = fuelType;
                                                     articleVersion.EngineSize = engineSize != null ? int.Parse(engineSize) : (int?)null;
-                                                    if (articleVersion.DaysOld == null) try { articleVersion.DaysOld = int.Parse(daysOld); } catch (Exception) { articleVersion.DaysOld = 0; }
                                                     articleVersion.Price = int.Parse(price);
                                                     _articleVersionRepo.Create(articleVersion);
 
@@ -357,7 +342,7 @@ namespace GumtreeScraper
             finally
             {
                 if (_failedArticles > 0) _log.Info($"{_failedArticles} articles failed.");
-                _log.Info($"Gumtree Scraper finished scraping for {carMake} {carModel}.");
+                _log.Info($"Search List Scraper finished scraping for {carMake} {carModel}.");
             }
         }
 

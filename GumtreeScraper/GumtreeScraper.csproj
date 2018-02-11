@@ -60,9 +60,10 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ArticleViewScraper.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="GumtreeScraper.cs" />
+    <Compile Include="SearchListScraper.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
