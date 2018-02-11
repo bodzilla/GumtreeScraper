@@ -172,13 +172,10 @@ namespace GumtreeScraper
                                                     string price = result.SelectSingleNode($"{path}/a/div[2]/span").InnerText.Trim();
 
                                                     // Standardise posted value.
-                                                    if (!String.IsNullOrEmpty(daysOld))
+                                                    if (!String.IsNullOrEmpty(daysOld) && !daysOld.Contains("days") && !daysOld.Contains("day")
+                                                        && daysOld.Equals("URGENT", StringComparison.CurrentCultureIgnoreCase))
                                                     {
-
-                                                        if (!daysOld.Contains("days") && !daysOld.Contains("day") && daysOld.Equals("URGENT", StringComparison.CurrentCultureIgnoreCase))
-                                                        {
-                                                            daysOld = "0";
-                                                        }
+                                                        daysOld = "0";
                                                     }
 
                                                     // Cleanse results.
