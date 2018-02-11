@@ -243,21 +243,26 @@ namespace GumtreeScraper
                                                         // Compare hashes, skip saving if they are the same as this means we have the latest version.
                                                         if (String.Equals(dbHash, hash))
                                                         {
-                                                            // Update the posted time for all versions.
-                                                            daysOld = DateTime.Now.Subtract(dbArticleVersion.DateAdded).Days.ToString();
-                                                            IList<ArticleVersion> dbarticleVersions = new List<ArticleVersion>(dbArticle.VirtualArticleVersions);
-                                                            foreach (ArticleVersion dbVersion in dbarticleVersions)
-                                                            {
-                                                                if (String.Equals(dbArticleVersion.DaysOld.ToString(), daysOld)) continue;
-                                                                dbVersion.DaysOld = int.Parse(daysOld);
-                                                                _articleVersionRepo.Update(dbVersion);
-                                                            }
-
                                                             // Update thumbnail.
                                                             if (!String.Equals(dbArticle.Thumbnail, thumbnail))
                                                             {
                                                                 dbArticle.Thumbnail = thumbnail;
                                                                 _articleRepo.Update(dbArticle);
+                                                            }
+
+                                                            // Update the posted time for all versions.
+                                                            daysOld = DateTime.Now.Subtract(dbArticleVersion.DateAdded).Days.ToString();
+                                                            if (!String.Equals(daysOld, "0"))
+                                                            {
+                                                                IList<ArticleVersion> dbarticleVersions = new List<ArticleVersion>(dbArticle.VirtualArticleVersions);
+                                                                foreach (ArticleVersion dbVersion in dbarticleVersions)
+                                                                {
+                                                                    if (!String.Equals(dbArticleVersion.DaysOld.ToString(), daysOld))
+                                                                    {
+                                                                        dbVersion.DaysOld = int.Parse(daysOld);
+                                                                        _articleVersionRepo.Update(dbVersion);
+                                                                    }
+                                                                }
                                                             }
 
                                                             _log.Info("Skipped duplicate article.");
@@ -298,7 +303,7 @@ namespace GumtreeScraper
                                                     articleVersion.SellerType = sellerType;
                                                     articleVersion.FuelType = fuelType;
                                                     articleVersion.EngineSize = engineSize != null ? int.Parse(engineSize) : (int?)null;
-                                                    articleVersion.DaysOld = int.Parse(daysOld);
+                                                    try { articleVersion.DaysOld = int.Parse(daysOld); } catch (Exception) { articleVersion.DaysOld = 0; }
                                                     articleVersion.Price = int.Parse(price);
                                                     _articleVersionRepo.Create(articleVersion);
 
