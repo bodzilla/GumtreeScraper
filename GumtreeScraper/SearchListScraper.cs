@@ -175,7 +175,10 @@ namespace GumtreeScraper
                                                     if (String.IsNullOrEmpty(daysOld))
                                                     {
                                                         // if it's empty, add to view list so we can fetch the days old later.
-                                                        if (!Program.ArticleViewList.Contains(link)) Program.ArticleViewList.Add(link);
+                                                        if (!_articleLinksList.Contains(link) && !Program.ArticleViewList.Contains(link))
+                                                        {
+                                                            Program.ArticleViewList.Add(link);
+                                                        }
                                                     }
                                                     else if (!daysOld.Contains("days") && !daysOld.Contains("day"))
                                                     {
