@@ -172,10 +172,13 @@ namespace GumtreeScraper
                                                     string price = result.SelectSingleNode($"{path}/a/div[2]/span").InnerText.Trim();
 
                                                     // Standardise posted value.
-                                                    if (!daysOld.Contains("days") || !daysOld.Contains("day") ||
-                                                        daysOld.Equals("URGENT", StringComparison.CurrentCultureIgnoreCase) || String.IsNullOrEmpty(daysOld))
+                                                    if (!String.IsNullOrEmpty(daysOld))
                                                     {
-                                                        daysOld = "0";
+
+                                                        if (!daysOld.Contains("days") && !daysOld.Contains("day") && daysOld.Equals("URGENT", StringComparison.CurrentCultureIgnoreCase))
+                                                        {
+                                                            daysOld = "0";
+                                                        }
                                                     }
 
                                                     // Cleanse results.
@@ -243,11 +246,14 @@ namespace GumtreeScraper
                                                         // Compare hashes, skip saving if they are the same as this means we have the latest version.
                                                         if (String.Equals(dbHash, hash))
                                                         {
-                                                            // Update the posted time.
-                                                            if (!String.Equals(dbArticleVersion.DaysOld.ToString(), daysOld))
+                                                            // Update the posted time for all versions.
+                                                            daysOld = DateTime.Now.Subtract(dbArticleVersion.DateAdded).Days.ToString();
+                                                            IList<ArticleVersion> dbarticleVersions = new List<ArticleVersion>(dbArticle.VirtualArticleVersions);
+                                                            foreach (ArticleVersion dbVersion in dbarticleVersions)
                                                             {
-                                                                dbArticleVersion.DaysOld = int.Parse(daysOld);
-                                                                _articleVersionRepo.Update(dbArticleVersion);
+                                                                if (String.Equals(dbArticleVersion.DaysOld.ToString(), daysOld)) continue;
+                                                                dbVersion.DaysOld = int.Parse(daysOld);
+                                                                _articleVersionRepo.Update(dbVersion);
                                                             }
 
                                                             // Update thumbnail.
