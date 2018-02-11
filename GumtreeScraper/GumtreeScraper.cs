@@ -292,6 +292,11 @@ namespace GumtreeScraper
                                                         articleState = "existing";
                                                         articleVersion.ArticleId = dbArticle.Id; // Link existing article.
                                                         articleVersion.Version = dbArticleVersion.Version + 1; // Increment version.
+                                                        if (String.Equals(daysOld, "0") && dbArticleVersion.DaysOld != 0)
+                                                        {
+                                                            // If days old couldn't be picked up, but exists in a prevoius version, set this instead.
+                                                            articleVersion.DaysOld = dbArticleVersion.DaysOld;
+                                                        }
                                                     }
 
                                                     // Set values and save.
@@ -303,7 +308,7 @@ namespace GumtreeScraper
                                                     articleVersion.SellerType = sellerType;
                                                     articleVersion.FuelType = fuelType;
                                                     articleVersion.EngineSize = engineSize != null ? int.Parse(engineSize) : (int?)null;
-                                                    try { articleVersion.DaysOld = int.Parse(daysOld); } catch (Exception) { articleVersion.DaysOld = 0; }
+                                                    if (articleVersion.DaysOld == null) try { articleVersion.DaysOld = int.Parse(daysOld); } catch (Exception) { articleVersion.DaysOld = 0; }
                                                     articleVersion.Price = int.Parse(price);
                                                     _articleVersionRepo.Create(articleVersion);
 
