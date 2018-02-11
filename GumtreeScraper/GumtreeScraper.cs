@@ -250,14 +250,14 @@ namespace GumtreeScraper
                                                                 _articleRepo.Update(dbArticle);
                                                             }
 
-                                                            // Update the posted time for all versions.
+                                                            // Update the days old for all versions.
                                                             daysOld = DateTime.Now.Subtract(dbArticleVersion.DateAdded).Days.ToString();
                                                             if (!String.Equals(daysOld, "0"))
                                                             {
                                                                 IList<ArticleVersion> dbarticleVersions = new List<ArticleVersion>(dbArticle.VirtualArticleVersions);
                                                                 foreach (ArticleVersion dbVersion in dbarticleVersions)
                                                                 {
-                                                                    if (!String.Equals(dbArticleVersion.DaysOld.ToString(), daysOld))
+                                                                    if (!String.Equals(dbVersion.DaysOld.ToString(), daysOld))
                                                                     {
                                                                         dbVersion.DaysOld = int.Parse(daysOld);
                                                                         _articleVersionRepo.Update(dbVersion);
