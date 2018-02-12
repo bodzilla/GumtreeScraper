@@ -2,8 +2,10 @@
 using System.Collections.Generic;
 using System.Configuration;
 using System.Linq;
+using System.Net;
 using System.Reflection;
 using System.Threading;
+using GumtreeScraper.Repository;
 using log4net;
 
 namespace GumtreeScraper
@@ -13,29 +15,40 @@ namespace GumtreeScraper
         private static readonly ILog Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private static bool _failed;
 
-        public static readonly IList<string> ArticleViewList = new List<string>();
+        public static readonly Stack<string> ArticleViewStack = new Stack<string>();
 
-        private static void Main()
+        private static void Main(string[] args)
         {
             try
             {
-                Log.Info("Retrieving runtime variables..");
-
-                // Get ScrapeList.
-                string[][] scrapeList = ConfigurationManager.AppSettings.AllKeys
-                    .Where(key => key.Contains("Scrape"))
-                    .Select(key => ConfigurationManager.AppSettings[key].Split(' '))
-                    .ToArray();
-
-                // Run for all search lists.
-                Log.Info("Starting Search List Scraper..");
-                foreach (string[] list in scrapeList)
+                // Update days old for all existing articles and deletes non-existing articles.
+                if (args.Length > 0)
                 {
-                    new SearchListScraper(list[0], list[1]);
+                    Log.Info("Starting Back Burner Mode..");
+                    foreach (string link in new ArticleRepository().GetAll().OrderBy(x => x.Id).Select(x => x.Link)) ArticleViewStack.Push(link);
+                    new ArticleViewScraper(ArticleViewStack);
                 }
+                else
+                {
+                    Log.Info("Retrieving runtime variables..");
 
-                // Run for all article view links.
-                if (ArticleViewList.Count > 0) new ArticleViewScraper(ArticleViewList);
+                    // Get ScrapeList.
+                    string[][] scrapeList = ConfigurationManager.AppSettings.AllKeys
+                        .Where(key => key.Contains("Scrape"))
+                        .Select(key => ConfigurationManager.AppSettings[key].Split(' '))
+                        .ToArray();
+
+                    // Run for all search lists.
+                    Log.Info("Starting Search List Scraper..");
+                    foreach (string[] list in scrapeList)
+                    {
+                        new SearchListScraper(list[0], list[1]);
+                    }
+
+                    // Run for all article view links.
+                    Log.Info("Starting Article View Scraper..");
+                    new ArticleViewScraper(ArticleViewStack);
+                }
             }
             catch (Exception ex)
             {

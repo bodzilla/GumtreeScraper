@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Configuration;
 using System.IO;
+using System.Linq;
 using System.Net.Http;
 using System.Reflection;
 using System.Text;
@@ -20,16 +22,19 @@ namespace GumtreeScraper
         private readonly int _timeout = int.Parse(ConfigurationManager.AppSettings["TimeoutSecs"]);
 
         private readonly ArticleRepository _articleRepo = new ArticleRepository();
-        private readonly Regex _removeNonNumeric = new Regex(@"[^\d]");
-        private readonly int _failedLinks;
+        private readonly ArticleVersionRepository _articleVersionRepo = new ArticleVersionRepository();
 
-        public ArticleViewScraper(IEnumerable<string> links)
+        private readonly Regex _removeNonNumeric = new Regex(@"[^\d]");
+
+        public ArticleViewScraper(Stack<string> links)
         {
             try
             {
-                // Scrape article view list.
-                foreach (string link in links)
+                // Scrape article view stack.
+                while (links.Count > 0)
                 {
+                    string link = links.Pop();
+
                     using (HttpClient client = new HttpClient())
                     {
                         client.Timeout = TimeSpan.FromSeconds(_timeout);
@@ -50,13 +55,37 @@ namespace GumtreeScraper
                                             string data = reader.ReadToEnd();
                                             HtmlDocument doc = new HtmlDocument();
                                             doc.LoadHtml(data);
-                                            string daysOld = doc.DocumentNode.SelectSingleNode(@"//*[dl[@class=""dl-attribute-list attribute-list1""]]/dl/dd[1]").InnerText.Trim();
+                                            string daysOld;
+
+                                            try
+                                            {
+                                                daysOld = doc.DocumentNode.SelectSingleNode(@"//*[dl[@class=""dl-attribute-list attribute-list1""]]/dl/dd[1]").InnerText.Trim();
+                                            }
+                                            catch (Exception)
+                                            {
+                                                Article articleToDelete = _articleRepo.Get(x => x.Link == link, x => x.VirtualArticleVersions);
+                                                IList<ArticleVersion> articleVersionsToDelete = articleToDelete.VirtualArticleVersions.ToList();
+                                                foreach (ArticleVersion articleVersion in articleVersionsToDelete) _articleVersionRepo.Delete(articleVersion);
+                                                _articleRepo.Delete(articleToDelete);
+                                                _log.Info("Article deleted.");
+                                                continue;
+                                            }
+
+                                            if (!daysOld.Contains("days") && !daysOld.Contains("day"))
+                                            {
+                                                // If it's not empty doesn't contain these days, it must mean it's from today.
+                                                daysOld = "0";
+                                            }
+
                                             if (!String.IsNullOrWhiteSpace(daysOld)) daysOld = _removeNonNumeric.Replace(daysOld, String.Empty);
 
                                             // Update days old.
                                             Article article = _articleRepo.Get(x => x.Link == link);
-                                            article.DaysOld = int.Parse(daysOld);
-                                            _articleRepo.Update(article);
+                                            if (!String.Equals(article.DaysOld.ToString(), daysOld))
+                                            {
+                                                article.DaysOld = int.Parse(daysOld);
+                                                _articleRepo.Update(article);
+                                            }
                                         }
                                     }
                                     else
@@ -68,9 +97,8 @@ namespace GumtreeScraper
                         }
                         catch (Exception ex)
                         {
-                            _failedLinks++;
                             _log.Error("Could not get web response.", ex.InnerException);
-                            throw;
+                            new ArticleViewScraper(links);
                         }
                     }
                 }
@@ -81,8 +109,7 @@ namespace GumtreeScraper
             }
             finally
             {
-                if (_failedLinks > 0) _log.Info($"{_failedLinks} links failed.");
-                _log.Info($"Article View Scraper finished scraping.");
+                _log.Info("Article View Scraper finished scraping.");
             }
         }
     }
