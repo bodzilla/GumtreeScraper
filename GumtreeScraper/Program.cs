@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Configuration;
 using System.Linq;
-using System.Net;
 using System.Reflection;
 using System.Threading;
 using GumtreeScraper.Repository;
