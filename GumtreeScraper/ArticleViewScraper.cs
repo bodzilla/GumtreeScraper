@@ -52,6 +52,7 @@ namespace GumtreeScraper
                                             doc.LoadHtml(data);
                                             string daysOld;
 
+                                            // Days old field may be in two different locations, depending on the UI version.
                                             try
                                             {
                                                 daysOld = doc.DocumentNode.SelectSingleNode(@"//*[dl[@class=""attributes-group attributes-entry""]]/dl[2]").InnerText.Trim();
@@ -64,7 +65,10 @@ namespace GumtreeScraper
                                                 }
                                                 catch (Exception)
                                                 {
-                                                    _log.Error("Missing article.");
+                                                    Article inactiveArticle = _articleRepo.Get(x => x.Link == link);
+                                                    inactiveArticle.Active = false;
+                                                    _articleRepo.Update(inactiveArticle);
+                                                    _log.Info("Setting article as inactive.");
                                                     continue;
                                                 }
                                             }

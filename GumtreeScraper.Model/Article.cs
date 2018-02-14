@@ -20,6 +20,10 @@ namespace GumtreeScraper.Model
 
         public string Link { get; set; }
 
+        public bool Active { get; set; } = true;
+
+        public bool Archived { get; set; } = false;
+
         public string Thumbnail { get; set; }
 
         public int CarModelId { get; set; }
