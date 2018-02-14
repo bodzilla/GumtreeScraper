@@ -18,11 +18,11 @@ namespace GumtreeScraper.Model
 
         public int? DaysOld { get; set; }
 
-        public string Link { get; set; }
-
         public bool Active { get; set; } = true;
 
         public bool Archived { get; set; } = false;
+
+        public string Link { get; set; }
 
         public string Thumbnail { get; set; }
 
