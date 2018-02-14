@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Configuration;
 using System.IO;
-using System.Linq;
 using System.Net.Http;
 using System.Reflection;
 using System.Text;
@@ -19,10 +18,7 @@ namespace GumtreeScraper
     {
         private readonly ILog _log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private readonly int _timeout = int.Parse(ConfigurationManager.AppSettings["TimeoutSecs"]);
-
         private readonly ArticleRepository _articleRepo = new ArticleRepository();
-        private readonly ArticleVersionRepository _articleVersionRepo = new ArticleVersionRepository();
-
         private readonly Regex _removeNonNumeric = new Regex(@"[^\d]");
 
         public ArticleViewScraper(Stack<string> links)
@@ -58,16 +54,19 @@ namespace GumtreeScraper
 
                                             try
                                             {
-                                                daysOld = doc.DocumentNode.SelectSingleNode(@"//*[dl[@class=""dl-attribute-list attribute-list1""]]/dl/dd[1]").InnerText.Trim();
+                                                daysOld = doc.DocumentNode.SelectSingleNode(@"//*[dl[@class=""attributes-group attributes-entry""]]/dl[2]").InnerText.Trim();
                                             }
                                             catch (Exception)
                                             {
-                                                Article articleToDelete = _articleRepo.Get(x => x.Link == link, x => x.VirtualArticleVersions);
-                                                IList<ArticleVersion> articleVersionsToDelete = articleToDelete.VirtualArticleVersions.ToList();
-                                                foreach (ArticleVersion articleVersion in articleVersionsToDelete) _articleVersionRepo.Delete(articleVersion);
-                                                _articleRepo.Delete(articleToDelete);
-                                                _log.Info("Article deleted.");
-                                                continue;
+                                                try
+                                                {
+                                                    daysOld = doc.DocumentNode.SelectSingleNode(@"//*[dl[@class=""dl-attribute-list attribute-list1""]]/dl/dd[1]").InnerText.Trim();
+                                                }
+                                                catch (Exception)
+                                                {
+                                                    _log.Error("Missing article.");
+                                                    continue;
+                                                }
                                             }
 
                                             if (!daysOld.Contains("days") && !daysOld.Contains("day"))
