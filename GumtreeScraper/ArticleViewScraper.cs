@@ -83,6 +83,7 @@ namespace GumtreeScraper
 
                                             // Update days old.
                                             Article article = _articleRepo.Get(x => x.Link == link);
+
                                             if (!String.Equals(article.DaysOld.ToString(), daysOld))
                                             {
                                                 article.DaysOld = int.Parse(daysOld);
@@ -92,14 +93,15 @@ namespace GumtreeScraper
                                     }
                                     else
                                     {
-                                        throw new NullReferenceException("Web request returns null, check request.");
+                                        throw new NullReferenceException($"Web request returns null, check link: {link}");
                                     }
                                 }
                             }
                         }
                         catch (Exception ex)
                         {
-                            _log.Error("Could not get web response.", ex.InnerException);
+                            client.Dispose();
+                            _log.Error("Could not get/process web response.", ex.GetBaseException());
                             new ArticleViewScraper(links);
                         }
                     }
@@ -107,7 +109,7 @@ namespace GumtreeScraper
             }
             catch (Exception ex)
             {
-                _log.Fatal(ex.GetBaseException());
+                _log.Error(ex.GetBaseException());
             }
             finally
             {

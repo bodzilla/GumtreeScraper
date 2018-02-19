@@ -324,7 +324,7 @@ namespace GumtreeScraper
                                     }
                                     else
                                     {
-                                        throw new NullReferenceException("Web request returns null, check request.");
+                                        throw new NullReferenceException($"Web request returns null, check link: {currentPage}");
                                     }
                                 }
                             }
@@ -332,7 +332,7 @@ namespace GumtreeScraper
                         catch (Exception ex)
                         {
                             _failedArticles++;
-                            _log.Error("Could not get web response.", ex.InnerException);
+                            _log.Error("Could not get/process web response.", ex.GetBaseException());
                             throw;
                         }
                     }
@@ -340,7 +340,7 @@ namespace GumtreeScraper
             }
             catch (Exception ex)
             {
-                _log.Fatal(ex.GetBaseException());
+                _log.Error(ex.GetBaseException());
             }
             finally
             {
