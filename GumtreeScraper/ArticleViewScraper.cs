@@ -61,6 +61,9 @@ namespace GumtreeScraper
                                             {
                                                 try
                                                 {
+                                                    // Check if removed label exists first.
+                                                    string removedLbl = doc.DocumentNode.SelectSingleNode(@"//*[div[@class=""media-body""]]/div[2]").InnerText.Trim();
+                                                    if (!String.IsNullOrWhiteSpace(removedLbl)) throw new Exception();
                                                     daysOld = doc.DocumentNode.SelectSingleNode(@"//*[dl[@class=""dl-attribute-list attribute-list1""]]/dl/dd[1]").InnerText.Trim();
                                                 }
                                                 catch (Exception)
