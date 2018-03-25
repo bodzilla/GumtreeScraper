@@ -62,8 +62,8 @@ namespace GumtreeScraper
 
                 // Get all articles and article links.
                 _log.Info("Retrieving indexes..");
-                _articleList.UnionWith(_articleRepo.GetAll(x => x.VirtualArticleVersions));
-                _articleLinksList.UnionWith(_articleRepo.GetAll().ToList().Select(x => x.Link));
+                _articleList.UnionWith(_articleRepo.GetAll().Where(x => x.CarModelId == carModelId && x.Active && x.Archived == false));
+                _articleLinksList.UnionWith(_articleRepo.GetAll().Where(x => x.CarModelId == carModelId && x.Active && x.Archived == false).ToList().Select(x => x.Link));
 
                 // Scrape search list by paging through from oldest to latest page.
                 for (int i = pages; i >= 1; i--)
