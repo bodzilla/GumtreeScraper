@@ -26,7 +26,7 @@ namespace GumtreeScraper
                     Log.Info("Starting Back Burner Mode..");
 
                     // Only get active & non-archived articles to reduce time and bandwidth usage of Article scraper.
-                    foreach (string link in new ArticleRepository().GetAll().Where(x => x.Active && x.Archived == false).OrderBy(x => x.DaysOld == null).ThenBy(x => x.Id).Select(x => x.Link)) ArticleViewStack.Push(link);
+                    foreach (string link in new ArticleRepository().GetList(x => x.Active).OrderBy(x => x.DaysOld == null).ThenBy(x => x.Id).Select(x => x.Link)) ArticleViewStack.Push(link);
                     new ArticleViewScraper(ArticleViewStack);
                 }
                 else
@@ -54,7 +54,7 @@ namespace GumtreeScraper
             catch (Exception ex)
             {
                 _failed = true;
-                Log.Fatal("Could not run GumtreeScraper.", ex.GetBaseException());
+                Log.Fatal("Could not run GumtreeScraper.", ex);
             }
             finally
             {

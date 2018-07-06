@@ -61,8 +61,8 @@ namespace GumtreeScraper
 
                 // Get all articles and article links.
                 _log.Info("Retrieving indexes..");
-                _articleList.UnionWith(_articleRepo.GetAll().Where(x => x.CarModelId == carModelId && x.Active && x.Archived == false));
-                _articleLinksList.UnionWith(_articleRepo.GetAll().Where(x => x.CarModelId == carModelId && x.Active && x.Archived == false).ToList().Select(x => x.Link));
+                _articleList.UnionWith(_articleRepo.GetList(x => x.CarModelId == carModelId && x.Active, x => x.VirtualArticleVersions));
+                _articleLinksList.UnionWith(_articleRepo.GetList(x => x.CarModelId == carModelId && x.Active).Select(x => x.Link));
 
                 // Scrape search list by paging through from oldest to latest page.
                 for (int i = pages; i >= 1; i--)
@@ -131,6 +131,7 @@ namespace GumtreeScraper
                                             string sellerType = null;
                                             string fuelType = null;
                                             string engineSize = null;
+                                            string updates = null;
 
                                             HtmlNodeCollection details = result.SelectNodes($"{path}/a/div[2]/ul/li");
 
@@ -167,7 +168,14 @@ namespace GumtreeScraper
                                             sellerType = String.IsNullOrEmpty(sellerType) ? "Private" : "Trade";
 
                                             string daysOld = null;
-                                            try { daysOld = result.SelectSingleNode($"{path}/a/div[2]/div[2]/span").InnerText.Trim(); } catch (Exception) { }
+                                            try
+                                            {
+                                                daysOld = result.SelectSingleNode($"{path}/a/div[2]/div[2]/span").InnerText.Trim();
+                                            }
+                                            catch (Exception)
+                                            {
+                                                // ignored
+                                            }
 
                                             string price = result.SelectSingleNode($"{path}/a/div[2]/span").InnerText.Trim();
 
@@ -186,7 +194,7 @@ namespace GumtreeScraper
                                             // Cleanse results.
                                             if (!String.IsNullOrWhiteSpace(location)) location = _removeExcessLocationText.Replace(_removeLineBreaks.Replace(location, " "), String.Empty);
                                             if (!String.IsNullOrWhiteSpace(year)) year = _removeNonNumeric.Replace(year, String.Empty);
-                                            if (!String.IsNullOrWhiteSpace(mileage)) mileage = _removeNonNumeric.Replace(mileage, String.Empty);
+                                            mileage = !String.IsNullOrWhiteSpace(mileage) ? _removeNonNumeric.Replace(mileage, String.Empty) : null;
                                             if (!String.IsNullOrWhiteSpace(engineSize)) engineSize = _removeNonNumeric.Replace(engineSize, String.Empty);
                                             if (!String.IsNullOrWhiteSpace(daysOld)) daysOld = _removeNonNumeric.Replace(daysOld, String.Empty);
                                             price = _removeNonNumeric.Replace(price, String.Empty);
@@ -202,12 +210,16 @@ namespace GumtreeScraper
                                                 try
                                                 {
                                                     // Set existing article and latest article version.
-                                                    dbArticle = _articleList.SingleOrDefault(x => x.Link == link);
-                                                    dbArticleVersion = dbArticle.VirtualArticleVersions.OrderByDescending(x => x.Version).FirstOrDefault();
+                                                    dbArticle = _articleList.Single(x => x.Link == link);
+                                                    dbArticleVersion = dbArticle.VirtualArticleVersions.OrderByDescending(x => x.Version).First();
                                                 }
-                                                catch (Exception)
+                                                catch (Exception ex)
                                                 {
-                                                    _log.Error("Could not get dbArticle/dbArticleVersion.");
+                                                    _log.Error($"Could not get dbArticle/dbArticleVersion, removing from db. Link: {dbArticle.Link}", ex);
+                                                    if (dbArticleVersion != null) { _articleVersionRepo.Delete(dbArticleVersion); }
+                                                    if (dbArticle != null) _articleRepo.Delete(dbArticle);
+                                                    if (_articleList.Contains(dbArticle)) _articleList.Remove(dbArticle);
+                                                    if (_articleLinksList.Contains(link)) _articleLinksList.Remove(link);
                                                     continue;
                                                 }
 
@@ -258,6 +270,21 @@ namespace GumtreeScraper
                                                     _log.Info("Skipped duplicate article.");
                                                     continue;
                                                 }
+
+                                                // Check if price changed.
+                                                if (int.Parse(price) > dbArticleVersion.Price) updates += $"Price increased from £{dbArticleVersion.Price:N0}. ";
+                                                if (int.Parse(price) < dbArticleVersion.Price) updates += $"Price decreased from £{dbArticleVersion.Price:N0}. ";
+
+                                                // Check if mileage changed.
+                                                if (mileage != null && dbArticleVersion.Mileage == null) updates += "Mileage newly added. ";
+                                                if (mileage != null && int.Parse(mileage) > dbArticleVersion.Mileage) updates += $"Mileage increased from {dbArticleVersion.Mileage:N0}. ";
+                                                if (mileage != null && int.Parse(mileage) < dbArticleVersion.Mileage) updates += $"Mileage decreased from {dbArticleVersion.Mileage:N0}. ";
+
+                                                // Check if location changed.
+                                                if (location != null && !String.Equals(dbArticleVersion.Location, location)) updates += $"Location updated from {dbArticleVersion.Location}.";
+
+                                                // Check if thumbnail changed.
+                                                if (thumbnail != null && !String.Equals(dbArticle.Thumbnail, thumbnail)) updates += "Thumbnail updated.";
                                             }
 
                                             // Init vars for db save.
@@ -290,11 +317,12 @@ namespace GumtreeScraper
                                             articleVersion.Location = location;
                                             articleVersion.Description = description;
                                             articleVersion.Year = year != null ? int.Parse(year) : (int?)null;
-                                            articleVersion.Mileage = mileage != null ? int.Parse(mileage) : (int?)null;
+                                            articleVersion.Mileage = !String.IsNullOrWhiteSpace(mileage) ? int.Parse(mileage) : (int?)null;
                                             articleVersion.SellerType = sellerType;
                                             articleVersion.FuelType = fuelType;
                                             articleVersion.EngineSize = engineSize != null ? int.Parse(engineSize) : (int?)null;
                                             articleVersion.Price = int.Parse(price);
+                                            articleVersion.Updates = updates;
                                             _articleVersionRepo.Create(articleVersion);
 
                                             // Add to hash sets.
@@ -315,7 +343,7 @@ namespace GumtreeScraper
                                         }
                                         catch (Exception ex)
                                         {
-                                            _log.Error("Could not process and save article/article version.", ex.GetBaseException());
+                                            _log.Error("Could not process and save article/article version.", ex);
                                         }
                                     }
                                 }
@@ -325,14 +353,14 @@ namespace GumtreeScraper
                     catch (Exception ex)
                     {
                         _failedArticles++;
-                        _log.Error("Could not get/process web response.", ex.GetBaseException());
+                        _log.Error($"Could not get/process web response for {carMake} {carModel}.", ex);
                         throw;
                     }
                 }
             }
             catch (Exception ex)
             {
-                _log.Error(ex.GetBaseException());
+                _log.Error(ex);
             }
             finally
             {

@@ -32,6 +32,8 @@ namespace GumtreeScraper.Model
 
         public int Price { get; set; }
 
+        public string Updates { get; set; }
+
         [ForeignKey("ArticleId")]
         public virtual Article VirtualArticle { get; set; }
     }

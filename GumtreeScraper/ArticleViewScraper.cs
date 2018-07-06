@@ -90,7 +90,7 @@ namespace GumtreeScraper
                                 }
                                 catch (Exception ex)
                                 {
-                                    _log.Error("Could not get/process article view fields.", ex.GetBaseException());
+                                    _log.Error("Could not get/process article view fields.", ex);
                                     new ArticleViewScraper(links);
                                 }
                             }
@@ -101,7 +101,7 @@ namespace GumtreeScraper
             }
             catch (Exception ex)
             {
-                _log.Error("Could not get/process web response.", ex.GetBaseException());
+                _log.Error("Could not get/process web response.", ex);
                 new ArticleViewScraper(links);
             }
             finally

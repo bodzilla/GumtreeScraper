@@ -1,5 +1,6 @@
 ﻿using System.Data.Entity;
 using System.Data.Entity.ModelConfiguration.Conventions;
+using GumtreeScraper.DataAccess.Migrations;
 using GumtreeScraper.Model;
 
 namespace GumtreeScraper.DataAccess
@@ -15,6 +16,8 @@ namespace GumtreeScraper.DataAccess
 
         protected override void OnModelCreating(DbModelBuilder modelBuilder)
         {
+            Database.SetInitializer(new MigrateDatabaseToLatestVersion<GumtreeScraperContext, Configuration>());
+
             modelBuilder.Conventions.Remove<OneToManyCascadeDeleteConvention>();
 
             modelBuilder.Entity<CarMake>().ToTable("CarMake");
@@ -22,13 +25,5 @@ namespace GumtreeScraper.DataAccess
             modelBuilder.Entity<Article>().ToTable("Article");
             modelBuilder.Entity<ArticleVersion>().ToTable("ArticleVersion");
         }
-
-        public DbSet<CarMake> CarMakes { get; set; }
-
-        public DbSet<CarModel> CarModels { get; set; }
-
-        public DbSet<Article> Articles { get; set; }
-
-        public DbSet<ArticleVersion> ArticleVersions { get; set; }
     }
 }

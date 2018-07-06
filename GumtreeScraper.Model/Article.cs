@@ -20,8 +20,6 @@ namespace GumtreeScraper.Model
 
         public bool Active { get; set; } = true;
 
-        public bool Archived { get; set; } = false;
-
         public string Link { get; set; }
 
         public string Thumbnail { get; set; }
