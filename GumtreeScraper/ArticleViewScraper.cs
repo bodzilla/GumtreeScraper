@@ -42,28 +42,30 @@ namespace GumtreeScraper
                     _log.Info($"Scraping view: {link}");
 
                     // Web request response will be read into this variable.
-                    string data;
+                    string data = null;
+
+                    // Parse response as HTML document.
+                    HtmlDocument doc = new HtmlDocument();
 
                     try
                     {
-                        data = _proxy.MakeRequest(link);
+                        while (data == null)
+                        {
+                            data = _proxy.MakeRequest(link);
+                            doc.LoadHtml(data);
+
+                            // Check if robot detected.
+                            var robotTag = doc.DocumentNode.SelectSingleNode("//meta[@name='ROBOTS']");
+                            if (robotTag == null) continue;
+                            data = null;
+                            _proxy.NextProxy();
+                        }
                     }
                     catch (Exception ex)
                     {
                         _log.Error("Could not get web response for article view.", ex);
                         continue;
                     }
-
-                    // If no response, skip to next.
-                    if (String.IsNullOrEmpty(data))
-                    {
-                        _log.Error("Skipping view page due to null content.");
-                        continue;
-                    }
-
-                    // Parse response as HTML document.
-                    HtmlDocument doc = new HtmlDocument();
-                    doc.LoadHtml(data);
 
                     try
                     {
