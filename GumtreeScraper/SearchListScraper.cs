@@ -253,7 +253,6 @@ namespace GumtreeScraper
 
                                     // Hash db article version.
                                     byte[] dbTitleBytes = Encoding.ASCII.GetBytes(dbArticleVersion.Title);
-                                    byte[] dbLocationBytes = Encoding.ASCII.GetBytes(dbArticleVersion.Location);
                                     byte[] dbDescriptionBytes = Encoding.ASCII.GetBytes(dbArticleVersion.Description);
                                     byte[] dbYearBytes = { };
                                     if (!String.IsNullOrWhiteSpace(dbArticleVersion.Year.ToString())) dbYearBytes = Encoding.ASCII.GetBytes(dbArticleVersion.Year.ToString());
@@ -265,12 +264,11 @@ namespace GumtreeScraper
                                     byte[] dbEngineSizeBytes = { };
                                     if (!String.IsNullOrWhiteSpace(dbArticleVersion.EngineSize.ToString())) dbEngineSizeBytes = Encoding.ASCII.GetBytes(dbArticleVersion.EngineSize.ToString());
                                     byte[] dbPriceBytes = Encoding.ASCII.GetBytes(dbArticleVersion.Price.ToString());
-                                    byte[] dbBytes = CombineBytes(dbTitleBytes, dbLocationBytes, dbDescriptionBytes, dbYearBytes, dbMileageBytes, dbSellerTypeBytes, dbFuelTypeBytes, dbEngineSizeBytes, dbPriceBytes);
+                                    byte[] dbBytes = CombineBytes(dbTitleBytes, dbDescriptionBytes, dbYearBytes, dbMileageBytes, dbSellerTypeBytes, dbFuelTypeBytes, dbEngineSizeBytes, dbPriceBytes);
                                     string dbHash = GenerateHash(dbBytes);
 
                                     // Hash fetched verison of this article.
                                     byte[] titleBytes = Encoding.ASCII.GetBytes(title);
-                                    byte[] locationBytes = Encoding.ASCII.GetBytes(location);
                                     byte[] descriptionBytes = Encoding.ASCII.GetBytes(description);
                                     byte[] yearBytes = { };
                                     if (!String.IsNullOrWhiteSpace(year)) yearBytes = Encoding.ASCII.GetBytes(year);
@@ -282,7 +280,7 @@ namespace GumtreeScraper
                                     byte[] engineSizeBytes = { };
                                     if (!String.IsNullOrWhiteSpace(engineSize)) engineSizeBytes = Encoding.ASCII.GetBytes(engineSize);
                                     byte[] priceBytes = Encoding.ASCII.GetBytes(price);
-                                    byte[] bytes = CombineBytes(titleBytes, locationBytes, descriptionBytes, yearBytes, mileageBytes, sellerTypeBytes, fuelTypeBytes, engineSizeBytes, priceBytes);
+                                    byte[] bytes = CombineBytes(titleBytes, descriptionBytes, yearBytes, mileageBytes, sellerTypeBytes, fuelTypeBytes, engineSizeBytes, priceBytes);
                                     string hash = GenerateHash(bytes);
 
                                     // Compare hashes, skip saving if they are the same as this means we have the latest version.
