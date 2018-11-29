@@ -153,14 +153,14 @@ namespace GumtreeScraper
                                         thumbnail = result.SelectSingleNode($"{path}/a/div[1]/div[1]/div/img").GetAttributeValue("data-lazy", null);
                                 }
 
-                                string mediaCount;
+                                string mediaCount = null;
                                 try
                                 {
                                     mediaCount = result.SelectSingleNode($@"{path}/a/div[1]/div[1]/div/ul/li").InnerText.Trim();
                                 }
-                                catch (Exception)
+                                catch (Exception ex)
                                 {
-                                    mediaCount = "0";
+                                    mediaCount = result.SelectSingleNode($@"{path}/a/div[1]/div[1]/div/div/ul/li").InnerText.Trim();
                                 }
 
                                 // Loop through property list as some may not exist.
