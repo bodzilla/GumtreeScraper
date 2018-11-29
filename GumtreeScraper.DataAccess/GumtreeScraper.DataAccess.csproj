@@ -45,6 +45,10 @@
     <Compile Include="Migrations\201807060857427_InitialCreate.Designer.cs">
       <DependentUpon>201807060857427_InitialCreate.cs</DependentUpon>
     </Compile>
+    <Compile Include="Migrations\201811291339041_AddMediaCount.cs" />
+    <Compile Include="Migrations\201811291339041_AddMediaCount.Designer.cs">
+      <DependentUpon>201811291339041_AddMediaCount.cs</DependentUpon>
+    </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="GumtreeScraperContext.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -64,6 +68,9 @@
   <ItemGroup>
     <EmbeddedResource Include="Migrations\201807060857427_InitialCreate.resx">
       <DependentUpon>201807060857427_InitialCreate.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201811291339041_AddMediaCount.resx">
+      <DependentUpon>201811291339041_AddMediaCount.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

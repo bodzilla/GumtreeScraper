@@ -24,6 +24,8 @@ namespace GumtreeScraper.Model
 
         public string Thumbnail { get; set; }
 
+        public int MediaCount { get; set; } = 0;
+
         public int CarModelId { get; set; }
 
         [ForeignKey("CarModelId")]

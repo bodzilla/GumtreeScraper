@@ -153,6 +153,16 @@ namespace GumtreeScraper
                                         thumbnail = result.SelectSingleNode($"{path}/a/div[1]/div[1]/div/img").GetAttributeValue("data-lazy", null);
                                 }
 
+                                string mediaCount;
+                                try
+                                {
+                                    mediaCount = result.SelectSingleNode($@"{path}/a/div[1]/div[1]/div/ul/li").InnerText.Trim();
+                                }
+                                catch (Exception)
+                                {
+                                    mediaCount = "0";
+                                }
+
                                 // Loop through property list as some may not exist.
                                 string year = null;
                                 string mileage = null;
@@ -220,6 +230,7 @@ namespace GumtreeScraper
                                 }
 
                                 // Cleanse results.
+                                if (!String.IsNullOrWhiteSpace(mediaCount)) mediaCount = _removeNonNumeric.Replace(mediaCount, String.Empty);
                                 if (!String.IsNullOrWhiteSpace(thumbnail)) thumbnail = thumbnail.Replace("99.JPG", "90.JPG"); // Larger version of thumbnail.
                                 if (!String.IsNullOrWhiteSpace(location)) location = _removeExcessLocationText.Replace(_removeLineBreaks.Replace(location, " "), String.Empty);
                                 if (!String.IsNullOrWhiteSpace(year)) year = _removeNonNumeric.Replace(year, String.Empty);
@@ -287,12 +298,23 @@ namespace GumtreeScraper
                                     // Compare hashes, skip saving if they are the same as this means we have the latest version.
                                     if (String.Equals(dbHash, hash))
                                     {
+                                        bool updateArticle = false;
+
                                         // Update thumbnail.
                                         if (!String.Equals(dbArticle.Thumbnail, thumbnail))
                                         {
                                             dbArticle.Thumbnail = thumbnail;
-                                            _articleRepo.Update(dbArticle);
+                                            updateArticle = true;
                                         }
+
+                                        // Update media count.
+                                        if (dbArticle.MediaCount != int.Parse(mediaCount))
+                                        {
+                                            dbArticle.MediaCount = int.Parse(mediaCount);
+                                            updateArticle = true;
+                                        }
+
+                                        if (updateArticle) _articleRepo.Update(dbArticle);
 
                                         _log.Info("Skipped duplicate article.");
                                         continue;
@@ -325,6 +347,7 @@ namespace GumtreeScraper
                                     articleState = "new";
                                     article.Link = link;
                                     article.Thumbnail = thumbnail;
+                                    article.MediaCount = int.Parse(mediaCount);
                                     article.CarModelId = carModelId;
                                     article.DaysOld = daysOld != null ? int.Parse(daysOld) : (int?)null;
                                     _articleRepo.Create(article);
