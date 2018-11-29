@@ -220,7 +220,7 @@ namespace GumtreeScraper
                                 }
 
                                 // Cleanse results.
-                                if (!String.IsNullOrWhiteSpace(thumbnail)) thumbnail = thumbnail.Replace("99.JPG", "85.JPG"); // Larger version of thumbnail.
+                                if (!String.IsNullOrWhiteSpace(thumbnail)) thumbnail = thumbnail.Replace("99.JPG", "93.JPG"); // Larger version of thumbnail.
                                 if (!String.IsNullOrWhiteSpace(location)) location = _removeExcessLocationText.Replace(_removeLineBreaks.Replace(location, " "), String.Empty);
                                 if (!String.IsNullOrWhiteSpace(year)) year = _removeNonNumeric.Replace(year, String.Empty);
                                 mileage = !String.IsNullOrWhiteSpace(mileage) ? _removeNonNumeric.Replace(mileage, String.Empty) : null;
