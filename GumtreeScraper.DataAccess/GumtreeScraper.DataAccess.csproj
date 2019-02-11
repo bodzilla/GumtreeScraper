@@ -49,6 +49,10 @@
     <Compile Include="Migrations\201811291339041_AddMediaCount.Designer.cs">
       <DependentUpon>201811291339041_AddMediaCount.cs</DependentUpon>
     </Compile>
+    <Compile Include="Migrations\201902112124321_AddDateEndedToArticle.cs" />
+    <Compile Include="Migrations\201902112124321_AddDateEndedToArticle.Designer.cs">
+      <DependentUpon>201902112124321_AddDateEndedToArticle.cs</DependentUpon>
+    </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="GumtreeScraperContext.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -71,6 +75,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Migrations\201811291339041_AddMediaCount.resx">
       <DependentUpon>201811291339041_AddMediaCount.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201902112124321_AddDateEndedToArticle.resx">
+      <DependentUpon>201902112124321_AddDateEndedToArticle.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

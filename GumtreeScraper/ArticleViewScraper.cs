@@ -89,6 +89,7 @@ namespace GumtreeScraper
                             {
                                 Article inactiveArticle = _articleRepo.Get(x => x.Link == link);
                                 inactiveArticle.Active = false;
+                                inactiveArticle.DateEnded = DateTime.Now;
                                 _articleRepo.Update(inactiveArticle);
                                 _log.Info("Setting article as inactive.");
                                 continue;

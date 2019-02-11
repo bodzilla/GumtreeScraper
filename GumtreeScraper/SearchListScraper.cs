@@ -63,8 +63,8 @@ namespace GumtreeScraper
 
                 // Get all articles and article links.
                 _log.Info("Retrieving indexes..");
-                _articleList.UnionWith(_articleRepo.GetList(x => x.CarModelId == carModelId && x.Active, x => x.VirtualArticleVersions));
-                _articleLinksList.UnionWith(_articleRepo.GetList(x => x.CarModelId == carModelId && x.Active).Select(x => x.Link));
+                _articleList.UnionWith(_articleRepo.GetList(x => x.CarModelId == carModelId, x => x.VirtualArticleVersions));
+                _articleLinksList.UnionWith(_articleRepo.GetList(x => x.CarModelId == carModelId).Select(x => x.Link));
 
                 // Scrape search list by paging through from oldest to latest page.
                 for (int i = pages; i >= 1; i--)
@@ -295,27 +295,35 @@ namespace GumtreeScraper
                                     byte[] bytes = CombineBytes(titleBytes, descriptionBytes, yearBytes, mileageBytes, sellerTypeBytes, fuelTypeBytes, engineSizeBytes, priceBytes);
                                     string hash = GenerateHash(bytes);
 
-                                    // Compare hashes, skip saving if they are the same as this means we have the latest version.
+                                    bool updateArticle = false;
+
+                                    // Update thumbnail.
+                                    if (!String.Equals(dbArticle.Thumbnail, thumbnail))
+                                    {
+                                        dbArticle.Thumbnail = thumbnail;
+                                        updateArticle = true;
+                                    }
+
+                                    // Update media count.
+                                    if (dbArticle.MediaCount != int.Parse(mediaCount))
+                                    {
+                                        dbArticle.MediaCount = int.Parse(mediaCount);
+                                        updateArticle = true;
+                                    }
+
+                                    // Check if relisted.
+                                    if (!dbArticle.Active)
+                                    {
+                                        dbArticle.Active = true;
+                                        dbArticle.DateEnded = null;
+                                        updates += $"Article relisted from {dbArticleVersion.DateAdded:dd/MM/yyyy hh:mm:ss tt}. ";
+                                    }
+
+                                    if (updateArticle) _articleRepo.Update(dbArticle);
+
+                                    // Check if the hashes are a match, if so then skip.
                                     if (String.Equals(dbHash, hash))
                                     {
-                                        bool updateArticle = false;
-
-                                        // Update thumbnail.
-                                        if (!String.Equals(dbArticle.Thumbnail, thumbnail))
-                                        {
-                                            dbArticle.Thumbnail = thumbnail;
-                                            updateArticle = true;
-                                        }
-
-                                        // Update media count.
-                                        if (dbArticle.MediaCount != int.Parse(mediaCount))
-                                        {
-                                            dbArticle.MediaCount = int.Parse(mediaCount);
-                                            updateArticle = true;
-                                        }
-
-                                        if (updateArticle) _articleRepo.Update(dbArticle);
-
                                         _log.Info("Skipped duplicate article.");
                                         continue;
                                     }

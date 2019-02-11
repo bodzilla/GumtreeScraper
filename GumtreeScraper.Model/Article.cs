@@ -16,6 +16,8 @@ namespace GumtreeScraper.Model
 
         public DateTime DateAdded { get; set; }
 
+        public DateTime? DateEnded { get; set; } = null;
+
         public int? DaysOld { get; set; }
 
         public bool Active { get; set; } = true;
