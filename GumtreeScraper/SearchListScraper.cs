@@ -317,6 +317,7 @@ namespace GumtreeScraper
                                         dbArticle.Active = true;
                                         dbArticle.DateEnded = null;
                                         updates += $"Article relisted from {dbArticleVersion.DateAdded:dd/MM/yyyy hh:mm:ss tt}. ";
+                                        updateArticle = true;
                                     }
 
                                     if (updateArticle) _articleRepo.Update(dbArticle);
