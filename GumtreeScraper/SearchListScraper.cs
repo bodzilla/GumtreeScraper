@@ -175,34 +175,36 @@ namespace GumtreeScraper
 
                                 foreach (HtmlNode detail in details)
                                 {
-                                    HtmlNode span = detail.SelectSingleNode($"{detail.XPath}/span[2]");
-                                    string spanText = span.InnerText.Trim();
-                                    string property = span.GetAttributeValue("itemprop", String.Empty);
+                                    HtmlNode spanProperty = detail.SelectSingleNode($"{detail.XPath}/span[2]");
+                                    HtmlNode spanType = spanProperty.SelectSingleNode($"{detail.XPath}/span[1]");
+                                    string text = spanProperty.InnerText.Trim();
+                                    string type = spanType.InnerText.Trim();
 
-                                    switch (property)
+                                    switch (type)
                                     {
-                                        case "dateVehicleFirstRegistered":
-                                            year = spanText;
+                                        case "Year":
+                                            year = text;
                                             break;
 
-                                        case "mileageFromOdometer":
-                                            mileage = spanText;
+                                        case "Mileage":
+                                            mileage = text;
                                             break;
 
-                                        case "": // Seller field appears as empty.
-                                            sellerType = spanText.Equals("Trade") ? "Trade" : "Private";
+                                        case "Seller type":
+                                            sellerType = text;
                                             break;
 
-                                        case "fuelType":
-                                            fuelType = spanText;
+                                        case "Fuel type":
+                                            fuelType = text;
                                             break;
 
-                                        case "vehicleEngine":
-                                            engineSize = spanText;
+                                        case "Engine size":
+                                            engineSize = text;
                                             break;
                                     }
                                 }
 
+                                // "Private" seller field appears as empty so ensure we do this check to assign the correct type.
                                 sellerType = String.IsNullOrEmpty(sellerType) ? "Private" : "Trade";
 
                                 string daysOld = null;
