@@ -337,8 +337,8 @@ namespace GumtreeScraper
 
                                     // Check if mileage changed.
                                     if (mileage != null && dbArticleVersion.Mileage == null) updates += "Mileage newly added. ";
-                                    if (mileage != null && int.Parse(mileage) > dbArticleVersion.Mileage) updates += $"Mileage increased from {dbArticleVersion.Mileage:N0}. ";
-                                    if (mileage != null && int.Parse(mileage) < dbArticleVersion.Mileage) updates += $"Mileage decreased from {dbArticleVersion.Mileage:N0}. ";
+                                    if (mileage != null && dbArticleVersion.Mileage != null && int.Parse(mileage) > dbArticleVersion.Mileage) updates += $"Mileage increased from {dbArticleVersion.Mileage:N0}. ";
+                                    if (mileage != null && dbArticleVersion.Mileage != null && int.Parse(mileage) < dbArticleVersion.Mileage) updates += $"Mileage decreased from {dbArticleVersion.Mileage:N0}. ";
 
                                     // Check if location changed.
                                     if (location != null && !String.Equals(dbArticleVersion.Location, location)) updates += $"Location updated from {dbArticleVersion.Location}.";
