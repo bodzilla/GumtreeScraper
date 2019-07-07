@@ -20,6 +20,7 @@ namespace GumtreeScraper
     {
         private readonly ILog _log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private readonly Proxy _proxy = Proxy.Instance;
+        private readonly bool _useProxy = bool.Parse(ConfigurationManager.AppSettings["UseProxy"]);
         private readonly bool _useSleep = bool.Parse(ConfigurationManager.AppSettings["UseSleep"]);
         private readonly int _sleepMin = int.Parse(ConfigurationManager.AppSettings["MinSleepMilliSecs"]);
         private readonly int _sleepMax = int.Parse(ConfigurationManager.AppSettings["MaxSleepMilliSecs"]);
@@ -97,7 +98,9 @@ namespace GumtreeScraper
                                 // Parse response as HTML document.
                                 HtmlDocument doc = new HtmlDocument();
                                 doc.LoadHtml(data);
-                                results = doc.DocumentNode.SelectNodes(@"//*[a[@class=""listing-link""]]");
+                                results = doc.DocumentNode.SelectNodes(@"//*[article[@class=""listing-maxi""]]/article");
+
+                                if (!_useProxy) continue;
 
                                 // If results empty, use the next proxy and retry.
                                 if (results == null) _proxy.NextProxy();
